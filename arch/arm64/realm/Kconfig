@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: GPL-2.0
+
+menuconfig ARM64_REALM
+	bool "ARM64 Realm Support"
+	depends on ARM64
+	help
+	  Say Y here to choose from a selection of Realm config paramters. 
+
+if ARM64_REALM
+
+config ARM64_REALM_AAA
+	bool "This paramter is a placeholder."
+	default y
+	help
+	  This option is TBD.
+
+config ARM64_REALM_BBB
+	bool "This paramter is a placeholder."
+	default y
+	help
+	  This option is TBD.
+
+endif

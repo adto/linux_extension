@@ -15,6 +15,7 @@
 #include <linux/uaccess.h> //copy_to/from_user()
 #include <linux/ioctl.h>
 #include <linux/sched.h> //get current as current process
+#include <linux/arm-smccc.h> //for SMC function call
 
 #define REALM_MAJOR 1
 #define REALM_MINOR 1
@@ -26,12 +27,14 @@
 #define ENTER_REALM _IO(REALM_MINOR,'c')
 #define EXIT_REALM _IO(REALM_MINOR,'d')
 
+#define GENERIC_ERROR -1
+
 int32_t value = 0;
 dev_t dev = 0;
 static struct class *dev_class;
 static struct cdev realm_cdev;
 /*
-** Function Prototypes
+** Function definitions
 */
 static int      __init realm_init(void);
 static void     __exit realm_exit(void);
@@ -40,8 +43,9 @@ static int      realm_release(struct inode *inode, struct file *file);
 static ssize_t  realm_read(struct file *filp, char __user *buf, size_t len,loff_t * off);
 static ssize_t  realm_write(struct file *filp, const char *buf, size_t len, loff_t * off);
 static long     realm_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+static int      smc_start(unsigned long func_id);
 /*
-** File operation sturcture
+** File operation structure
 */
 static struct file_operations fops =
 {
@@ -52,6 +56,23 @@ static struct file_operations fops =
         .unlocked_ioctl = realm_ioctl,
         .release        = realm_release,
 };
+
+/*
+** This function is used to start synchronous SMC function call
+*/
+static int smc_start(unsigned long func_id)
+{
+	struct arm_smccc_res res;
+
+	arm_smccc_smc(func_id, 0, 0, 0, 0, 0, 0, 0, &res);
+	if (res.a0 != 0) {
+		pr_info("smc_start() returns res.a0 = 0x%lx\n", res.a0);
+		return GENERIC_ERROR;
+	}
+
+	return 0;
+}
+
 /*
 ** This function will be called when we open the realm file
 */
@@ -60,6 +81,7 @@ static int realm_open(struct inode *inode, struct file *file)
         pr_info("Device file of realm is opened.\n");
         return 0;
 }
+
 /*
 ** This function will be called when we close the realm file
 */
@@ -68,6 +90,7 @@ static int realm_release(struct inode *inode, struct file *file)
         pr_info("Device file of realm is closed.\n");
         return 0;
 }
+
 /*
 ** This function will be called when we read the realm file
 */
@@ -76,6 +99,7 @@ static ssize_t realm_read(struct file *filp, char __user *buf, size_t len, loff_
         pr_info("Read function of realm is called.\n");
         return 0;
 }
+
 /*
 ** This function will be called when we write the Device file
 */
@@ -84,6 +108,10 @@ static ssize_t realm_write(struct file *filp, const char __user *buf, size_t len
         pr_info("Write function of realm is called.\n");
         return len;
 }
+
+__attribute__ ((__noinline__))
+void * get_pc (void) { return __builtin_return_address(0); }
+
 /*
 ** This function will be called when we write IOCTL on the Device file
 */
@@ -93,9 +121,21 @@ static long realm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
          	 	case ENTER_REALM:
          	 		pr_info("All hope abandon ye who enter the Realm here!\n");
 
+         	 		/*test area*/
+         	 		uint64_t foo;
+         	 		asm volatile ("mov %0, lr" : "=r"(foo) ::);
+         	 		pr_info("%lx\n", foo);
+
+         	 		uint64_t function_address = (uint64_t) realm_ioctl;
+         	 		pr_info("%lx\n", function_address);
+
+         	 		pr_info("%lx\n", get_pc());
+
          	 		pr_info("The process is \"%s\" (pid %i)\n", current->comm, current->pid);
 
+         	 		(void)smc_start(1);
 
+         	 		/*end of test area*/
 					break;
 
          	 	case EXIT_REALM:

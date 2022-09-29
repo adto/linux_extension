@@ -4,3 +4,4 @@
 #
 
 obj-$(CONFIG_ARM64_REALM) += realm.o
+obj-$(CONFIG_ARM64_REALM) += tf_if/

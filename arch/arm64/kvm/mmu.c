@@ -1296,6 +1296,7 @@ int kvm_mmu_init(u32 *hyp_va_bits)
 		goto out;
 	}
 
+	//adto
 	err = kvm_pgtable_hyp_init(hyp_pgtable, *hyp_va_bits, &kvm_hyp_mm_ops);
 	if (err)
 		goto out_free_pgtable;

@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: GPL-2.0
 
-menuconfig ARM64_REALM
-	bool "ARM64 Realm Support"
+menuconfig ARM64_SOS
+	bool "ARM64 Sos Support"
 	depends on ARM64
 	help
-	  Say Y here to choose from a selection of Realm config paramters. 
+	  Say Y here to choose from a selection of Sos config paramters. 
 
-if ARM64_REALM
+if ARM64_SOS
 
-config ARM64_REALM_AAA
+config ARM64_SOS_AAA
 	bool "This paramter is a placeholder."
 	default y
 	help
 	  This option is TBD.
 
-config ARM64_REALM_BBB
+config ARM64_SOS_BBB
 	bool "This paramter is a placeholder."
 	default y
 	help

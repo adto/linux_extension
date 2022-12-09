@@ -1941,7 +1941,7 @@ source "drivers/acpi/Kconfig"
 
 source "arch/arm64/kvm/Kconfig"
 
-source "arch/arm64/realm/Kconfig"
+source "arch/arm64/sos/Kconfig"
 
 if CRYPTO
 source "arch/arm64/crypto/Kconfig"

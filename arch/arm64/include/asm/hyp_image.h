@@ -16,8 +16,10 @@
  * to separate it from the kernel proper.
  */
 #define kvm_nvhe_sym(sym)	__kvm_nvhe_##sym
+#define sos_hyp_sym(sym)	__sos_hyp_##sym
 #else
 #define kvm_nvhe_sym(sym)	sym
+#define sos_hyp_sym(sym) sym
 #endif
 
 #ifdef LINKER_SCRIPT
@@ -62,6 +64,10 @@
 
 /* Defines a linker script alias for KVM nVHE hyp symbols */
 #define KVM_NVHE_ALIAS_HYP(first, sec)	kvm_nvhe_sym(first) = kvm_nvhe_sym(sec);
+
+
+#define SOS_HYP_ALIAS(sym)	sos_hyp_sym(sym) = sym;
+
 
 #endif /* LINKER_SCRIPT */
 

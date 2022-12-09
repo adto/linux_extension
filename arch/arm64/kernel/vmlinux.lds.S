@@ -6,7 +6,7 @@
  */
 
 #include <asm/hyp_image.h>
-#ifdef CONFIG_KVM
+#if defined (CONFIG_KVM) || defined (CONFIG_ARM64_SOS)
 #define HYPERVISOR_EXTABLE					\
 	. = ALIGN(SZ_8);					\
 	__start___kvm_ex_table = .;				\
@@ -333,7 +333,7 @@ ASSERT(__hibernate_exit_text_end - (__hibernate_exit_text_start & ~(SZ_4K - 1))
 ASSERT((__entry_tramp_text_end - __entry_tramp_text_start) == PAGE_SIZE,
 	"Entry trampoline text too big")
 #endif
-#ifdef CONFIG_KVM
+#if defined (CONFIG_KVM) || defined (CONFIG_ARM64_SOS)
 ASSERT(__hyp_bss_start == __bss_start, "HYP and Host BSS are misaligned")
 #endif
 /*

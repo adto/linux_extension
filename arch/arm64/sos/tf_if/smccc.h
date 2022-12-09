@@ -7,7 +7,7 @@
 #ifndef __SMCCC_H__
 #define __SMCCC_H__
 
-#include <utils_def.h>
+#include "../../sos/tf_if/utils_def.h"
 
 #define SMCCC_VERSION_MAJOR_SHIFT	U(16)
 #define SMCCC_VERSION_MAJOR_MASK	U(0x7FFF)

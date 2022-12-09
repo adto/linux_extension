@@ -136,4 +136,14 @@ KVM_NVHE_ALIAS(kvm_protected_mode_initialized);
 
 #endif /* CONFIG_KVM */
 
+#ifdef CONFIG_ARM64_SOS
+
+/* Alternative callbacks for init-time patching of nVHE hyp code. */
+SOS_HYP_ALIAS(kvm_get_kimage_voffset);
+SOS_HYP_ALIAS(kvm_update_va_mask);
+
+/* Kernel symbols used to call panic() from nVHE hyp code (via ERET). */
+SOS_HYP_ALIAS(nvhe_hyp_panic_handler);
+#endif /* CONFIG_ARM64_SOS */
+
 #endif /* __ARM64_KERNEL_IMAGE_VARS_H */

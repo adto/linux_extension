@@ -11,7 +11,9 @@
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/dma-mapping.h>
-#include <linux/kvm_host.h>
+#ifdef CONFIG_KVM
+	#include <linux/kvm_host.h>
+#endif
 #include <linux/preempt.h>
 #include <linux/suspend.h>
 #include <asm/cpufeature.h>
@@ -23,6 +25,11 @@
 #include <asm/suspend.h>
 #include <linux/kbuild.h>
 #include <linux/arm-smccc.h>
+
+#ifdef CONFIG_ARM64_SOS
+	#include <asm/sos_asm.h>
+    #include <asm/sos_host.h>
+#endif
 
 int main(void)
 {
@@ -105,6 +112,22 @@ int main(void)
   DEFINE(FTR_OVR_VAL_OFFSET,	offsetof(struct arm64_ftr_override, val));
   DEFINE(FTR_OVR_MASK_OFFSET,	offsetof(struct arm64_ftr_override, mask));
   BLANK();
+
+
+#ifdef CONFIG_ARM64_SOS
+  DEFINE(CPU_USER_PT_REGS,	    offsetof(struct kvm_cpu_context, regs));
+  DEFINE(HOST_CONTEXT_VCPU,	    offsetof(struct kvm_cpu_context, __hyp_running_vcpu));
+  DEFINE(HOST_DATA_CONTEXT,	    offsetof(struct kvm_host_data, host_ctxt));
+  DEFINE(SOS_INIT_MAIR_EL2,	    offsetof(struct sos_hyp_init_params, mair_el2));
+  DEFINE(SOS_INIT_TCR_EL2,	    offsetof(struct sos_hyp_init_params, tcr_el2));
+  DEFINE(SOS_INIT_TPIDR_EL2,	offsetof(struct sos_hyp_init_params, tpidr_el2));
+  DEFINE(SOS_INIT_STACK_HYP_VA,	offsetof(struct sos_hyp_init_params, stack_hyp_va));
+  DEFINE(SOS_INIT_PGD_PA,	    offsetof(struct sos_hyp_init_params, pgd_pa));
+  DEFINE(SOS_INIT_HCR_EL2,	    offsetof(struct sos_hyp_init_params, hcr_el2));
+  DEFINE(SOS_INIT_VTTBR,	    offsetof(struct sos_hyp_init_params, vttbr));
+  DEFINE(SOS_INIT_VTCR,	        offsetof(struct sos_hyp_init_params, vtcr));
+#endif
+
 #ifdef CONFIG_KVM
   DEFINE(VCPU_CONTEXT,		offsetof(struct kvm_vcpu, arch.ctxt));
   DEFINE(VCPU_FAULT_DISR,	offsetof(struct kvm_vcpu, arch.fault.disr_el1));

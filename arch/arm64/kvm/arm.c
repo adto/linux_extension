@@ -1790,6 +1790,7 @@ static int init_hyp_mode(void)
 	/*
 	 * Allocate Hyp PGD and setup Hyp identity mapping
 	 */
+	//adto
 	err = kvm_mmu_init(&hyp_va_bits);
 	if (err)
 		goto out_err;
@@ -2086,6 +2087,7 @@ int kvm_arch_init(void *opaque)
 		return err;
 
 	if (!in_hyp_mode) {
+		//adto: current investigation
 		err = init_hyp_mode();
 		if (err)
 			goto out_err;

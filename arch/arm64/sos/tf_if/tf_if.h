@@ -4,9 +4,9 @@
  * Author: Adam Toth <tothadamster@gmail.com>
  */
 
-#include <smccc.h>
-#include <stdint_fake.h>
 #include <linux/arm-smccc.h> //for SMC function call
+#include "../../sos/tf_if/smccc.h"
+#include "../../sos/tf_if/stdint_fake.h"
 
 #define RMI_FNUM_MIN_VALUE	U(0x150)
 #define RMI_FNUM_MAX_VALUE	U(0x18F)

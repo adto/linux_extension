@@ -41,7 +41,13 @@
 #include <asm/cputype.h>
 #include <asm/cpu_ops.h>
 #include <asm/daifflags.h>
-#include <asm/kvm_mmu.h>
+
+#if defined (CONFIG_ARM64_SOS)
+	#include <asm/sos_mmu.h>
+#else
+	#include <asm/kvm_mmu.h>
+#endif
+
 #include <asm/mmu_context.h>
 #include <asm/numa.h>
 #include <asm/processor.h>
@@ -434,10 +440,19 @@ static void __init hyp_mode_check(void)
 			   "CPU: CPUs started in inconsistent modes");
 	else
 		pr_info("CPU: All CPU(s) started at EL1\n");
+
+#if defined (CONFIG_ARM64_SOS)
+	if (IS_ENABLED(CONFIG_ARM64_SOS) && !is_kernel_in_hyp_mode()) {
+		sos_compute_layout();
+		sos_apply_hyp_relocations();
+	}
+#else
 	if (IS_ENABLED(CONFIG_KVM) && !is_kernel_in_hyp_mode()) {
 		kvm_compute_layout();
 		kvm_apply_hyp_relocations();
 	}
+
+#endif
 }
 
 void __init smp_cpus_done(unsigned int max_cpus)

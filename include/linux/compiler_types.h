@@ -301,6 +301,7 @@ struct ftrace_likely_data {
 # define __compiletime_error(message)
 #endif
 
+/*
 #ifdef __OPTIMIZE__
 # define __compiletime_assert(condition, msg, prefix, suffix)		\
 	do {								\
@@ -311,6 +312,9 @@ struct ftrace_likely_data {
 #else
 # define __compiletime_assert(condition, msg, prefix, suffix) do { } while (0)
 #endif
+*/
+# define __compiletime_assert(condition, msg, prefix, suffix) do { } while (0)
+
 
 #define _compiletime_assert(condition, msg, prefix, suffix) \
 	__compiletime_assert(condition, msg, prefix, suffix)

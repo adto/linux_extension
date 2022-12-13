@@ -32,7 +32,12 @@
 #include <linux/irq_work.h>
 #include <linux/kernel_stat.h>
 #include <linux/kexec.h>
-#include <linux/kvm_host.h>
+#if defined (CONFIG_ARM64_SOS)
+	//placeholder
+#else
+	#include <linux/kvm_host.h>
+#endif
+
 
 #include <asm/alternative.h>
 #include <asm/atomic.h>

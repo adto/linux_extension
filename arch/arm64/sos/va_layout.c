@@ -7,7 +7,7 @@
 //#include <linux/random.h>
 #include <linux/memblock.h> //memblock_start_of_DRAM
 //#include <asm/alternative.h>
-//#include <asm/debug-monitors.h>
+#include <asm/debug-monitors.h>
 //#include <asm/insn.h>
 #include <asm/sos_host.h>
 #include <asm/sos_mmu.h>
@@ -291,9 +291,9 @@ void kvm_get_kimage_voffset(struct alt_instr *alt,
 	generate_mov_q(kimage_voffset, origptr, updptr, nr_inst);
 }
 
-//void kvm_compute_final_ctr_el0(struct alt_instr *alt,
-//			       __le32 *origptr, __le32 *updptr, int nr_inst)
-//{
-//	generate_mov_q(read_sanitised_ftr_reg(SYS_CTR_EL0),
-//		       origptr, updptr, nr_inst);
-//}
+void kvm_compute_final_ctr_el0(struct alt_instr *alt,
+			       __le32 *origptr, __le32 *updptr, int nr_inst)
+{
+	generate_mov_q(read_sanitised_ftr_reg(SYS_CTR_EL0),
+		       origptr, updptr, nr_inst);
+}

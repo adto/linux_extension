@@ -9,30 +9,30 @@
 
 #include <asm/sos_host.h>
 //#include <linux/kvm_host.h>
-//#include <asm/kvm_hyp.h>
-//#include <asm/kvm_pgtable.h>
+#include <asm/sos_hyp.h>
+#include <asm/sos_pgtable.h>
 //#include <asm/virt.h>
-//#include <nvhe/spinlock.h>
-//
-//struct host_kvm {
-//	struct kvm_arch arch;
-//	struct kvm_pgtable pgt;
-//	struct kvm_pgtable_mm_ops mm_ops;
-//	hyp_spinlock_t lock;
-//};
-//extern struct host_kvm host_kvm;
-//
-//int __pkvm_prot_finalize(void);
-//int __pkvm_mark_hyp(phys_addr_t start, phys_addr_t end);
-//
-//int kvm_host_prepare_stage2(void *mem_pgt_pool, void *dev_pgt_pool);
+#include "spinlock.h"
+
+struct host_kvm {
+	struct kvm_arch arch;
+	struct kvm_pgtable pgt;
+	struct kvm_pgtable_mm_ops mm_ops;
+	hyp_spinlock_t lock;
+};
+extern struct host_kvm host_kvm;
+
+int __pkvm_prot_finalize(void);
+int __pkvm_mark_hyp(phys_addr_t start, phys_addr_t end);
+
+int kvm_host_prepare_stage2(void *mem_pgt_pool, void *dev_pgt_pool);
 void handle_host_mem_abort(struct kvm_cpu_context *host_ctxt);
 
-//static __always_inline void __load_host_stage2(void)
-//{
-//	if (static_branch_likely(&kvm_protected_mode_initialized))
-//		__load_stage2(&host_kvm.arch.mmu, host_kvm.arch.vtcr);
-//	else
-//		write_sysreg(0, vttbr_el2);
-//}
+static __always_inline void __load_host_stage2(void)
+{
+	if (static_branch_likely(&kvm_protected_mode_initialized))
+		__load_stage2(&host_kvm.arch.mmu, host_kvm.arch.vtcr);
+	else
+		write_sysreg(0, vttbr_el2);
+}
 #endif /* __SOS_HYP_MEM_PROTECT__ */

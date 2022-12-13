@@ -56,7 +56,7 @@
 //#endif
 //
 //static enum kvm_mode kvm_mode = KVM_MODE_DEFAULT;
-//DEFINE_STATIC_KEY_FALSE(kvm_protected_mode_initialized);
+DEFINE_STATIC_KEY_FALSE(kvm_protected_mode_initialized);
 
 DECLARE_SOS_SYM_PER_CPU(unsigned long, kvm_hyp_vector);
 
@@ -1645,21 +1645,21 @@ static void _kvm_arch_hardware_disable(void *discard)
 //{
 //}
 //#endif
-//
-//static void init_cpu_logical_map(void)
-//{
-//	unsigned int cpu;
-//
-//	/*
-//	 * Copy the MPIDR <-> logical CPU ID mapping to hyp.
-//	 * Only copy the set of online CPUs whose features have been chacked
-//	 * against the finalized system capabilities. The hypervisor will not
-//	 * allow any other CPUs from the `possible` set to boot.
-//	 */
-//	for_each_online_cpu(cpu)
-//		hyp_cpu_logical_map[cpu] = cpu_logical_map(cpu);
-//}
-//
+
+static void init_cpu_logical_map(void)
+{
+	unsigned int cpu;
+
+	/*
+	 * Copy the MPIDR <-> logical CPU ID mapping to hyp.
+	 * Only copy the set of online CPUs whose features have been chacked
+	 * against the finalized system capabilities. The hypervisor will not
+	 * allow any other CPUs from the `possible` set to boot.
+	 */
+	for_each_online_cpu(cpu)
+		hyp_cpu_logical_map[cpu] = cpu_logical_map(cpu);
+}
+
 //#define init_psci_0_1_impl_state(config, what)	\
 //	config.psci_0_1_ ## what ## _implemented = psci_ops.what
 //
@@ -1756,42 +1756,42 @@ out:
 //		free_pages(kvm_arm_hyp_percpu_base[cpu], nvhe_percpu_order());
 //	}
 //}
-//
-//static int do_pkvm_init(u32 hyp_va_bits)
-//{
-//	void *per_cpu_base = kvm_ksym_ref(kvm_arm_hyp_percpu_base);
-//	int ret;
-//
-//	preempt_disable();
-//	hyp_install_host_vector();
-//	ret = kvm_call_hyp_nvhe(__pkvm_init, hyp_mem_base, hyp_mem_size,
-//				num_possible_cpus(), kern_hyp_va(per_cpu_base),
-//				hyp_va_bits);
-//	preempt_enable();
-//
-//	return ret;
-//}
-//
-//static int kvm_hyp_init_protection(u32 hyp_va_bits)
-//{
-//	void *addr = phys_to_virt(hyp_mem_base);
-//	int ret;
-//
-//	kvm_nvhe_sym(id_aa64mmfr0_el1_sys_val) = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
-//	kvm_nvhe_sym(id_aa64mmfr1_el1_sys_val) = read_sanitised_ftr_reg(SYS_ID_AA64MMFR1_EL1);
-//
-//	ret = create_hyp_mappings(addr, addr + hyp_mem_size, PAGE_HYP);
-//	if (ret)
-//		return ret;
-//
-//	ret = do_pkvm_init(hyp_va_bits);
-//	if (ret)
-//		return ret;
-//
-//	free_hyp_pgds();
-//
-//	return 0;
-//}
+
+static int do_pkvm_init(u32 hyp_va_bits)
+{
+	void *per_cpu_base = kvm_ksym_ref(kvm_arm_hyp_percpu_base);
+	int ret;
+
+	preempt_disable();
+	hyp_install_host_vector();
+	ret = kvm_call_hyp_nvhe(__pkvm_init, hyp_mem_base, hyp_mem_size,
+				num_possible_cpus(), kern_hyp_va(per_cpu_base),
+				hyp_va_bits);
+	preempt_enable();
+
+	return ret;
+}
+
+static int kvm_hyp_init_protection(u32 hyp_va_bits)
+{
+	void *addr = phys_to_virt(hyp_mem_base);
+	int ret;
+
+	sos_hyp_sym(id_aa64mmfr0_el1_sys_val) = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
+	sos_hyp_sym(id_aa64mmfr1_el1_sys_val) = read_sanitised_ftr_reg(SYS_ID_AA64MMFR1_EL1);
+
+	ret = create_hyp_mappings(addr, addr + hyp_mem_size, PAGE_HYP);
+	if (ret)
+		return ret;
+
+	ret = do_pkvm_init(hyp_va_bits);
+	if (ret)
+		return ret;
+
+	free_hyp_pgds();
+
+	return 0;
+}
 
 /**
  * Inits Hyp-mode on all online CPUs
@@ -1850,7 +1850,7 @@ static int init_hyp_mode(void)
 		sos_info("__per_cpu_start: %lx\n", CHOOSE_SOS_HYP_SYM(__per_cpu_start));
 		sos_info("nvhe_percpu_size: %lx\n", nvhe_percpu_size());
 
-		memcpy(page_addr, 0xffff800010f4e000, nvhe_percpu_size());
+		memcpy(page_addr, CHOOSE_SOS_HYP_SYM(__per_cpu_start), nvhe_percpu_size());
 		kvm_arm_hyp_percpu_base[cpu] = (unsigned long)page_addr;
 	}
 
@@ -1927,7 +1927,9 @@ static int init_hyp_mode(void)
 	}
 
 //	if (is_protected_kvm_enabled()) {
-//		init_cpu_logical_map();
+
+		//adto:selected pkvm feature shall be used.
+		init_cpu_logical_map();
 //
 //		if (!init_psci_relay()) {
 //			err = -ENODEV;
@@ -1936,11 +1938,13 @@ static int init_hyp_mode(void)
 //	}
 
 //	if (is_protected_kvm_enabled()) {
-//		err = kvm_hyp_init_protection(hyp_va_bits);
-//		if (err) {
-//			kvm_err("Failed to init hyp memory protection\n");
-//			goto out_err;
-//		}
+
+		//adto:selected pkvm feature shall be used.
+		err = kvm_hyp_init_protection(hyp_va_bits);
+		if (err) {
+			sos_err("Failed to init hyp memory protection\n");
+			goto out_err;
+		}
 //	}
 
 	return 0;
@@ -1951,71 +1955,71 @@ out_err:
 	return err;
 }
 
-//static void _kvm_host_prot_finalize(void *discard)
-//{
-//	WARN_ON(kvm_call_hyp_nvhe(__pkvm_prot_finalize));
-//}
-//
-//static inline int pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
-//{
-//	return kvm_call_hyp_nvhe(__pkvm_mark_hyp, start, end);
-//}
-//
-//#define pkvm_mark_hyp_section(__section)		\
-//	pkvm_mark_hyp(__pa_symbol(__section##_start),	\
-//			__pa_symbol(__section##_end))
-//
-//static int finalize_hyp_mode(void)
-//{
-//	int cpu, ret;
-//
-//	if (!is_protected_kvm_enabled())
-//		return 0;
-//
-//	ret = pkvm_mark_hyp_section(__hyp_idmap_text);
-//	if (ret)
-//		return ret;
-//
-//	ret = pkvm_mark_hyp_section(__hyp_text);
-//	if (ret)
-//		return ret;
-//
-//	ret = pkvm_mark_hyp_section(__hyp_rodata);
-//	if (ret)
-//		return ret;
-//
-//	ret = pkvm_mark_hyp_section(__hyp_bss);
-//	if (ret)
-//		return ret;
-//
-//	ret = pkvm_mark_hyp(hyp_mem_base, hyp_mem_base + hyp_mem_size);
-//	if (ret)
-//		return ret;
-//
-//	for_each_possible_cpu(cpu) {
-//		phys_addr_t start = virt_to_phys((void *)kvm_arm_hyp_percpu_base[cpu]);
-//		phys_addr_t end = start + (PAGE_SIZE << nvhe_percpu_order());
-//
-//		ret = pkvm_mark_hyp(start, end);
-//		if (ret)
-//			return ret;
-//
-//		start = virt_to_phys((void *)per_cpu(kvm_arm_hyp_stack_page, cpu));
-//		end = start + PAGE_SIZE;
-//		ret = pkvm_mark_hyp(start, end);
-//		if (ret)
-//			return ret;
-//	}
-//
+static void _kvm_host_prot_finalize(void *discard)
+{
+	WARN_ON(kvm_call_hyp_nvhe(__pkvm_prot_finalize));
+}
+
+static inline int pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
+{
+	return kvm_call_hyp_nvhe(__pkvm_mark_hyp, start, end);
+}
+
+#define pkvm_mark_hyp_section(__section)		\
+	pkvm_mark_hyp(__pa_symbol(__section##_start),	\
+			__pa_symbol(__section##_end))
+
+static int finalize_hyp_mode(void)
+{
+	int cpu, ret;
+
+	if (!is_protected_kvm_enabled())
+		return 0;
+
+	ret = pkvm_mark_hyp_section(__hyp_idmap_text);
+	if (ret)
+		return ret;
+
+	ret = pkvm_mark_hyp_section(__hyp_text);
+	if (ret)
+		return ret;
+
+	ret = pkvm_mark_hyp_section(__hyp_rodata);
+	if (ret)
+		return ret;
+
+	ret = pkvm_mark_hyp_section(__hyp_bss);
+	if (ret)
+		return ret;
+
+	ret = pkvm_mark_hyp(hyp_mem_base, hyp_mem_base + hyp_mem_size);
+	if (ret)
+		return ret;
+
+	for_each_possible_cpu(cpu) {
+		phys_addr_t start = virt_to_phys((void *)kvm_arm_hyp_percpu_base[cpu]);
+		phys_addr_t end = start + (PAGE_SIZE << nvhe_percpu_order());
+
+		ret = pkvm_mark_hyp(start, end);
+		if (ret)
+			return ret;
+
+		start = virt_to_phys((void *)per_cpu(kvm_arm_hyp_stack_page, cpu));
+		end = start + PAGE_SIZE;
+		ret = pkvm_mark_hyp(start, end);
+		if (ret)
+			return ret;
+	}
+
 //	/*
 //	 * Flip the static key upfront as that may no longer be possible
 //	 * once the host stage 2 is installed.
 //	 */
 //	static_branch_enable(&kvm_protected_mode_initialized);
-//	on_each_cpu(_kvm_host_prot_finalize, NULL, 1);
-//
-//	return 0;
-//}
+	on_each_cpu(_kvm_host_prot_finalize, NULL, 1);
+
+	return 0;
+}
 
 static void check_kvm_target_cpu(void *ret)
 {
@@ -2129,16 +2133,16 @@ int sos_arch_init(void *opaque)
 		sos_err("Something nasty happened during init_subsystems function call.\n");
 		goto out_hyp;
 
-//	if (!in_hyp_mode) {
-//		err = finalize_hyp_mode();
-//		if (err) {
-//			kvm_err("Failed to finalize Hyp protection\n");
-//			goto out_hyp;
-//		}
-//	}
+	if (!in_hyp_mode) {
+		err = finalize_hyp_mode();
+		if (err) {
+			sos_err("Failed to finalize Hyp protection\n");
+			goto out_hyp;
+		}
+	}
 //
 //	if (is_protected_kvm_enabled()) {
-//		kvm_info("Protected nVHE mode initialized successfully\n");
+		sos_info("Protected nVHE mode initialized successfully\n");
 //	} else if (in_hyp_mode) {
 //		kvm_info("VHE mode initialized successfully\n");
 //	} else {

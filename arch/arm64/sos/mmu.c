@@ -7,6 +7,7 @@
 #include <asm/memory.h>
 #include <asm/sections.h>
 #include <asm/mmu_context.h> //idmap_t0sz
+#include <asm/sos_host.h>
 #include <asm/sos_mmu.h>
 #include <asm/sos_asm.h>
 #include <asm/sos_pgtable.h>
@@ -166,6 +167,19 @@ static struct kvm_pgtable_mm_ops kvm_hyp_mm_ops = {
 	.virt_to_phys		= kvm_host_pa,
 };
 
+/**
+ * free_hyp_pgds - free Hyp-mode page tables
+ */
+void free_hyp_pgds(void)
+{
+	mutex_lock(&kvm_hyp_pgd_mutex);
+	if (hyp_pgtable) {
+		kvm_pgtable_hyp_destroy(hyp_pgtable);
+		kfree(hyp_pgtable);
+		hyp_pgtable = NULL;
+	}
+	mutex_unlock(&kvm_hyp_pgd_mutex);
+}
 
 /**
  * create_hyp_mappings - duplicate a kernel virtual address range in Hyp mode

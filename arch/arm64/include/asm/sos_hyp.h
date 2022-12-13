@@ -9,6 +9,7 @@
 
 #include <linux/compiler.h>
 //#include <linux/kvm_host.h>
+#include <asm/percpu.h>
 #include <asm/alternative.h>
 #include <asm/sysreg.h>
 #include <asm/sos_asm.h>
@@ -44,8 +45,8 @@ DECLARE_PER_CPU(struct sos_hyp_init_params, sos_init_params);
 //
 //#define read_sysreg_el0(r)	read_sysreg_elx(r, _EL0, _EL02)
 //#define write_sysreg_el0(v,r)	write_sysreg_elx(v, r, _EL0, _EL02)
-//#define read_sysreg_el1(r)	read_sysreg_elx(r, _EL1, _EL12)
-//#define write_sysreg_el1(v,r)	write_sysreg_elx(v, r, _EL1, _EL12)
+#define read_sysreg_el1(r)	read_sysreg_elx(r, _EL1, _EL12)
+#define write_sysreg_el1(v,r)	write_sysreg_elx(v, r, _EL1, _EL12)
 #define read_sysreg_el2(r)	   read_sysreg_elx(r, _EL2, _EL1)
 #define write_sysreg_el2(v,r)  write_sysreg_elx(v, r, _EL2, _EL1)
 //
@@ -108,15 +109,15 @@ bool kvm_host_psci_handler(struct kvm_cpu_context *host_ctxt);
 //			       u64 elr, u64 par);
 //#endif
 //
-//#ifdef __KVM_NVHE_HYPERVISOR__
-//void __pkvm_init_switch_pgd(phys_addr_t phys, unsigned long size,
-//			    phys_addr_t pgd, void *sp, void *cont_fn);
-//int __pkvm_init(phys_addr_t phys, unsigned long size, unsigned long nr_cpus,
-//		unsigned long *per_cpu_base, u32 hyp_va_bits);
-//void __noreturn __host_enter(struct kvm_cpu_context *host_ctxt);
-//#endif
-//
-//extern u64 kvm_nvhe_sym(id_aa64mmfr0_el1_sys_val);
-//extern u64 kvm_nvhe_sym(id_aa64mmfr1_el1_sys_val);
+#ifdef __KVM_NVHE_HYPERVISOR__
+void __pkvm_init_switch_pgd(phys_addr_t phys, unsigned long size,
+			    phys_addr_t pgd, void *sp, void *cont_fn);
+int __pkvm_init(phys_addr_t phys, unsigned long size, unsigned long nr_cpus,
+		unsigned long *per_cpu_base, u32 hyp_va_bits);
+void __noreturn __host_enter(struct kvm_cpu_context *host_ctxt);
+#endif
+
+extern u64 sos_hyp_sym(id_aa64mmfr0_el1_sys_val);
+extern u64 sos_hyp_sym(id_aa64mmfr1_el1_sys_val);
 //
 #endif /* __ARM64_SOS_HYP_H__ */

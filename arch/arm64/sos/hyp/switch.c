@@ -4,6 +4,8 @@
  * Author: Marc Zyngier <marc.zyngier@arm.com>
  */
 
+#include <linux/types.h>
+#include <linux/threads.h>
 
 //#include <hyp/switch.h>
 //#include <hyp/sysreg-sr.h>
@@ -102,7 +104,7 @@ DEFINE_PER_CPU(unsigned long, kvm_hyp_vector);
 //	mdcr_el2 |= MDCR_EL2_E2TB_MASK << MDCR_EL2_E2TB_SHIFT;
 //
 //	write_sysreg(mdcr_el2, mdcr_el2);
-//	write_sysreg(this_cpu_ptr(&kvm_init_params)->hcr_el2, hcr_el2);
+//	write_sysreg(this_cpu_ptr(&sos_init_params)->hcr_el2, hcr_el2);
 //
 //	cptr = CPTR_EL2_DEFAULT;
 //	if (vcpu_has_sve(vcpu) && (vcpu->arch.flags & KVM_ARM64_FP_ENABLED))

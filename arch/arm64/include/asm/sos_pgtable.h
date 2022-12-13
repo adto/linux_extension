@@ -9,19 +9,21 @@
 
 #include <linux/bits.h>
 //#include <linux/sos_host.h>
+//#include <asm/sos.h>
+#include <asm/sos_asm.h>
 #include <linux/types.h>
 
 #define KVM_PGTABLE_MAX_LEVELS		4U
-//
-//static inline u64 kvm_get_parange(u64 mmfr0)
-//{
-//	u64 parange = cpuid_feature_extract_unsigned_field(mmfr0,
-//				ID_AA64MMFR0_PARANGE_SHIFT);
-//	if (parange > ID_AA64MMFR0_PARANGE_MAX)
-//		parange = ID_AA64MMFR0_PARANGE_MAX;
-//
-//	return parange;
-//}
+
+static inline u64 kvm_get_parange(u64 mmfr0)
+{
+	u64 parange = cpuid_feature_extract_unsigned_field(mmfr0,
+				ID_AA64MMFR0_PARANGE_SHIFT);
+	if (parange > ID_AA64MMFR0_PARANGE_MAX)
+		parange = ID_AA64MMFR0_PARANGE_MAX;
+
+	return parange;
+}
 
 typedef u64 kvm_pte_t;
 
@@ -191,39 +193,39 @@ void kvm_pgtable_hyp_destroy(struct kvm_pgtable *pgt);
 int kvm_pgtable_hyp_map(struct kvm_pgtable *pgt, u64 addr, u64 size, u64 phys,
 			enum kvm_pgtable_prot prot);
 
-///**
-// * kvm_get_vtcr() - Helper to construct VTCR_EL2
-// * @mmfr0:	Sanitized value of SYS_ID_AA64MMFR0_EL1 register.
-// * @mmfr1:	Sanitized value of SYS_ID_AA64MMFR1_EL1 register.
-// * @phys_shfit:	Value to set in VTCR_EL2.T0SZ.
-// *
-// * The VTCR value is common across all the physical CPUs on the system.
-// * We use system wide sanitised values to fill in different fields,
-// * except for Hardware Management of Access Flags. HA Flag is set
-// * unconditionally on all CPUs, as it is safe to run with or without
-// * the feature and the bit is RES0 on CPUs that don't support it.
-// *
-// * Return: VTCR_EL2 value
-// */
-//u64 kvm_get_vtcr(u64 mmfr0, u64 mmfr1, u32 phys_shift);
-//
-///**
-// * kvm_pgtable_stage2_init_flags() - Initialise a guest stage-2 page-table.
-// * @pgt:	Uninitialised page-table structure to initialise.
-// * @arch:	Arch-specific KVM structure representing the guest virtual
-// *		machine.
-// * @mm_ops:	Memory management callbacks.
-// * @flags:	Stage-2 configuration flags.
-// *
-// * Return: 0 on success, negative error code on failure.
-// */
-//int kvm_pgtable_stage2_init_flags(struct kvm_pgtable *pgt, struct kvm_arch *arch,
-//				  struct kvm_pgtable_mm_ops *mm_ops,
-//				  enum kvm_pgtable_stage2_flags flags);
-//
+/**
+ * kvm_get_vtcr() - Helper to construct VTCR_EL2
+ * @mmfr0:	Sanitized value of SYS_ID_AA64MMFR0_EL1 register.
+ * @mmfr1:	Sanitized value of SYS_ID_AA64MMFR1_EL1 register.
+ * @phys_shfit:	Value to set in VTCR_EL2.T0SZ.
+ *
+ * The VTCR value is common across all the physical CPUs on the system.
+ * We use system wide sanitised values to fill in different fields,
+ * except for Hardware Management of Access Flags. HA Flag is set
+ * unconditionally on all CPUs, as it is safe to run with or without
+ * the feature and the bit is RES0 on CPUs that don't support it.
+ *
+ * Return: VTCR_EL2 value
+ */
+u64 kvm_get_vtcr(u64 mmfr0, u64 mmfr1, u32 phys_shift);
+
+/**
+ * kvm_pgtable_stage2_init_flags() - Initialise a guest stage-2 page-table.
+ * @pgt:	Uninitialised page-table structure to initialise.
+ * @arch:	Arch-specific KVM structure representing the guest virtual
+ *		machine.
+ * @mm_ops:	Memory management callbacks.
+ * @flags:	Stage-2 configuration flags.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int kvm_pgtable_stage2_init_flags(struct kvm_pgtable *pgt, struct kvm_arch *arch,
+				  struct kvm_pgtable_mm_ops *mm_ops,
+				  enum kvm_pgtable_stage2_flags flags);
+
 //#define kvm_pgtable_stage2_init(pgt, arch, mm_ops) \
 //	kvm_pgtable_stage2_init_flags(pgt, arch, mm_ops, 0)
-//
+
 ///**
 // * kvm_pgtable_stage2_destroy() - Destroy an unused guest stage-2 page-table.
 // * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
@@ -264,27 +266,27 @@ int kvm_pgtable_hyp_map(struct kvm_pgtable *pgt, u64 addr, u64 size, u64 phys,
 //int kvm_pgtable_stage2_map(struct kvm_pgtable *pgt, u64 addr, u64 size,
 //			   u64 phys, enum kvm_pgtable_prot prot,
 //			   void *mc);
-//
-///**
-// * kvm_pgtable_stage2_set_owner() - Unmap and annotate pages in the IPA space to
-// *				    track ownership.
-// * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
-// * @addr:	Base intermediate physical address to annotate.
-// * @size:	Size of the annotated range.
-// * @mc:		Cache of pre-allocated and zeroed memory from which to allocate
-// *		page-table pages.
-// * @owner_id:	Unique identifier for the owner of the page.
-// *
-// * By default, all page-tables are owned by identifier 0. This function can be
-// * used to mark portions of the IPA space as owned by other entities. When a
-// * stage 2 is used with identity-mappings, these annotations allow to use the
-// * page-table data structure as a simple rmap.
-// *
-// * Return: 0 on success, negative error code on failure.
-// */
-//int kvm_pgtable_stage2_set_owner(struct kvm_pgtable *pgt, u64 addr, u64 size,
-//				 void *mc, u8 owner_id);
-//
+
+/**
+ * kvm_pgtable_stage2_set_owner() - Unmap and annotate pages in the IPA space to
+ *				    track ownership.
+ * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
+ * @addr:	Base intermediate physical address to annotate.
+ * @size:	Size of the annotated range.
+ * @mc:		Cache of pre-allocated and zeroed memory from which to allocate
+ *		page-table pages.
+ * @owner_id:	Unique identifier for the owner of the page.
+ *
+ * By default, all page-tables are owned by identifier 0. This function can be
+ * used to mark portions of the IPA space as owned by other entities. When a
+ * stage 2 is used with identity-mappings, these annotations allow to use the
+ * page-table data structure as a simple rmap.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int kvm_pgtable_stage2_set_owner(struct kvm_pgtable *pgt, u64 addr, u64 size,
+				 void *mc, u8 owner_id);
+
 ///**
 // * kvm_pgtable_stage2_unmap() - Remove a mapping from a guest stage-2 page-table.
 // * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().

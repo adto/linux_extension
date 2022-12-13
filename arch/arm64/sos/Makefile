@@ -2,6 +2,11 @@
 #
 # Makefile for the sos.
 #
+subdir-asflags-y := -I$(incdir)
+subdir-ccflags-y := -I$(incdir)				\
+		    -fno-stack-protector		\
+		    -DDISABLE_BRANCH_PROFILING		\
+		    $(DISABLE_STACKLEAK_PLUGIN)
 
 
 
@@ -11,6 +16,7 @@ obj-$(CONFIG_ARM64_SOS) += mmu.o
 obj-$(CONFIG_ARM64_SOS) += va_layout.o
 obj-$(CONFIG_ARM64_SOS) += guest.o
 obj-$(CONFIG_ARM64_SOS) += reset.o
+obj-$(CONFIG_ARM64_SOS) += reserved_mem.o
 obj-$(CONFIG_ARM64_SOS) += pgtable.o
 obj-$(CONFIG_ARM64_SOS) += handle_exit.o
 obj-$(CONFIG_ARM64_SOS) += tf_if/

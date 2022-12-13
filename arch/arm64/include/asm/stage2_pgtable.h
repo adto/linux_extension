@@ -42,12 +42,15 @@
  */
 #define kvm_mmu_cache_min_pages(kvm)	(kvm_stage2_levels(kvm) - 1)
 
-static inline phys_addr_t
-stage2_pgd_addr_end(struct kvm *kvm, phys_addr_t addr, phys_addr_t end)
-{
-	phys_addr_t boundary = (addr + stage2_pgdir_size(kvm)) & stage2_pgdir_mask(kvm);
+//adto quick fix
+#ifdef CONFIG_KVM
+	static inline phys_addr_t
+	stage2_pgd_addr_end(struct kvm *kvm, phys_addr_t addr, phys_addr_t end)
+	{
+		phys_addr_t boundary = (addr + stage2_pgdir_size(kvm)) & stage2_pgdir_mask(kvm);
 
-	return (boundary - 1 < end - 1) ? boundary : end;
-}
+		return (boundary - 1 < end - 1) ? boundary : end;
+	}
+#endif /*CONFIG_KVM*/
 
 #endif	/* __ARM64_S2_PGTABLE_H_ */

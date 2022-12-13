@@ -19,7 +19,7 @@
 #define sos_debug(fmt, ...) \
 	pr_debug("sos [%i]: " fmt, task_pid_nr(current), ## __VA_ARGS__)
 
-#define sos_hyp_sym(sym) __sos_hyp_##sym
+//#define sos_hyp_sym(sym) __sos_hyp_##sym
 
 #include <asm/hyp_image.h>
 #include <asm/virt.h>
@@ -61,11 +61,11 @@
 #define __KVM_HOST_SMCCC_FUNC___sos_exit			2
 //#define __KVM_HOST_SMCCC_FUNC___kvm_vcpu_run			1
 //#define __KVM_HOST_SMCCC_FUNC___kvm_flush_vm_context		2
-//#define __KVM_HOST_SMCCC_FUNC___kvm_tlb_flush_vmid_ipa		3
-//#define __KVM_HOST_SMCCC_FUNC___kvm_tlb_flush_vmid		4
+#define __KVM_HOST_SMCCC_FUNC___kvm_tlb_flush_vmid_ipa		3
+#define __KVM_HOST_SMCCC_FUNC___kvm_tlb_flush_vmid		4
 //#define __KVM_HOST_SMCCC_FUNC___kvm_flush_cpu_context		5
 //#define __KVM_HOST_SMCCC_FUNC___kvm_timer_set_cntvoff		6
-#define __KVM_HOST_SMCCC_FUNC___kvm_enable_ssbs		3
+#define __KVM_HOST_SMCCC_FUNC___kvm_enable_ssbs		5
 //#define __KVM_HOST_SMCCC_FUNC___vgic_v3_get_gic_config		8
 //#define __KVM_HOST_SMCCC_FUNC___vgic_v3_read_vmcr		9
 //#define __KVM_HOST_SMCCC_FUNC___vgic_v3_write_vmcr		10
@@ -73,20 +73,22 @@
 //#define __KVM_HOST_SMCCC_FUNC___kvm_get_mdcr_el2		12
 //#define __KVM_HOST_SMCCC_FUNC___vgic_v3_save_aprs		13
 //#define __KVM_HOST_SMCCC_FUNC___vgic_v3_restore_aprs		14
-//#define __KVM_HOST_SMCCC_FUNC___pkvm_init			15
-//#define __KVM_HOST_SMCCC_FUNC___pkvm_create_mappings		16
+#define __KVM_HOST_SMCCC_FUNC___pkvm_init			6
+//#define __KVM_HOST_SMCCC_FUNC___pkvm_create_mappings		5
 //#define __KVM_HOST_SMCCC_FUNC___pkvm_create_private_mapping	17
 //#define __KVM_HOST_SMCCC_FUNC___pkvm_cpu_set_vector		18
-//#define __KVM_HOST_SMCCC_FUNC___pkvm_prot_finalize		19
-//#define __KVM_HOST_SMCCC_FUNC___pkvm_mark_hyp			20
+#define __KVM_HOST_SMCCC_FUNC___pkvm_prot_finalize		7
+#define __KVM_HOST_SMCCC_FUNC___pkvm_mark_hyp			8
 //#define __KVM_HOST_SMCCC_FUNC___kvm_adjust_pc			21
 //
 #ifndef __ASSEMBLY__
-//
-#include <linux/mm.h>
+
+#include <asm/percpu.h> //adto
+
+///adto quick fix! #include <linux/mm.h>
 //
 //#define DECLARE_KVM_VHE_SYM(sym)	extern char sym[]
-#define DECLARE_SOS_HYP_SYM(sym) extern char __sos_hyp_##sym[]
+#define DECLARE_SOS_HYP_SYM(sym) extern char sos_hyp_sym(sym)[]
 //
 ///*
 // * Define a pair of symbols sharing the same name but one defined in
@@ -120,15 +122,15 @@
 		base ? (typeof(CHOOSE_SOS_HYP_SYM(sym))*)(base + off) : NULL;	\
 	})
 
-//#if defined(__KVM_NVHE_HYPERVISOR__)
-//
-//#define CHOOSE_NVHE_SYM(sym)	sym
-//#define CHOOSE_HYP_SYM(sym)	CHOOSE_NVHE_SYM(sym)
-//
+#if defined(__KVM_NVHE_HYPERVISOR__)
+
+#define CHOOSE_SOS_HYP_SYM(sym)	sym
+#define CHOOSE_HYP_SYM(sym)	CHOOSE_SOS_HYP_SYM(sym)
+
 ///* The nVHE hypervisor shouldn't even try to access VHE symbols */
-//extern void *__nvhe_undefined_symbol;
-//#define CHOOSE_VHE_SYM(sym)		__nvhe_undefined_symbol
-//#define this_cpu_ptr_hyp_sym(sym)	(&__nvhe_undefined_symbol)
+extern void *__nvhe_undefined_symbol;
+#define CHOOSE_VHE_SYM(sym)		__nvhe_undefined_symbol
+#define this_cpu_ptr_hyp_sym(sym)	(&__nvhe_undefined_symbol)
 //#define per_cpu_ptr_hyp_sym(sym, cpu)	(&__nvhe_undefined_symbol)
 //
 //#elif defined(__KVM_VHE_HYPERVISOR__)
@@ -142,22 +144,22 @@
 //#define this_cpu_ptr_hyp_sym(sym)	(&__vhe_undefined_symbol)
 //#define per_cpu_ptr_hyp_sym(sym, cpu)	(&__vhe_undefined_symbol)
 //
-//#else
-//
-///*
-// * BIG FAT WARNINGS:
-// *
-// * - Don't be tempted to change the following is_kernel_in_hyp_mode()
-// *   to has_vhe(). has_vhe() is implemented as a *final* capability,
-// *   while this is used early at boot time, when the capabilities are
-// *   not final yet....
-// *
-// * - Don't let the nVHE hypervisor have access to this, as it will
-// *   pick the *wrong* symbol (yes, it runs at EL2...).
-// */
-//#define CHOOSE_HYP_SYM(sym)		(is_kernel_in_hyp_mode()	\
-//					   ? CHOOSE_VHE_SYM(sym)	\
-//					   : CHOOSE_NVHE_SYM(sym))
+#else
+
+/*
+ * BIG FAT WARNINGS:
+ *
+ * - Don't be tempted to change the following is_kernel_in_hyp_mode()
+ *   to has_vhe(). has_vhe() is implemented as a *final* capability,
+ *   while this is used early at boot time, when the capabilities are
+ *   not final yet....
+ *
+ * - Don't let the nVHE hypervisor have access to this, as it will
+ *   pick the *wrong* symbol (yes, it runs at EL2...).
+ */
+#define CHOOSE_HYP_SYM(sym)		(is_kernel_in_hyp_mode()	\
+					   ? CHOOSE_VHE_SYM(sym)	\
+					   : CHOOSE_SOS_HYP_SYM(sym))
 
 #define this_cpu_ptr_hyp_sym(sym)	(is_kernel_in_hyp_mode()	\
 					   ? this_cpu_ptr(&sym)		\
@@ -167,10 +169,10 @@
 //					   ? per_cpu_ptr(&sym, cpu)	\
 //					   : per_cpu_ptr_nvhe_sym(sym, cpu))
 //
-//#define CHOOSE_VHE_SYM(sym)	sym
+#define CHOOSE_VHE_SYM(sym)	sym
 #define CHOOSE_SOS_HYP_SYM(sym)	sos_hyp_sym(sym)
-//
-//#endif
+
+#endif
 
 struct sos_hyp_init_params {
 	unsigned long mair_el2;
@@ -195,7 +197,7 @@ struct sos_hyp_init_params {
 //
 //struct kvm;
 struct kvm_vcpu;
-//struct kvm_s2_mmu;
+struct kvm_s2_mmu;
 //
 DECLARE_SOS_HYP_SYM(__kvm_hyp_init);
 DECLARE_SOS_HYP_SYM(__kvm_hyp_vector);
@@ -214,10 +216,10 @@ extern int __sos_exit(struct kvm_vcpu *vcpu);
 
 //extern void __kvm_flush_vm_context(void);
 //extern void __kvm_flush_cpu_context(struct kvm_s2_mmu *mmu);
-//extern void __kvm_tlb_flush_vmid_ipa(struct kvm_s2_mmu *mmu, phys_addr_t ipa,
-//				     int level);
-//extern void __kvm_tlb_flush_vmid(struct kvm_s2_mmu *mmu);
-//
+extern void __kvm_tlb_flush_vmid_ipa(struct kvm_s2_mmu *mmu, phys_addr_t ipa,
+				     int level);
+extern void __kvm_tlb_flush_vmid(struct kvm_s2_mmu *mmu);
+
 //extern void __kvm_timer_set_cntvoff(u64 cntvoff);
 //
 //extern int __kvm_vcpu_run(struct kvm_vcpu *vcpu);

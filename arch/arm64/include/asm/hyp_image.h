@@ -65,9 +65,8 @@
 /* Defines a linker script alias for KVM nVHE hyp symbols */
 #define KVM_NVHE_ALIAS_HYP(first, sec)	kvm_nvhe_sym(first) = kvm_nvhe_sym(sec);
 
-
-#define SOS_HYP_ALIAS(sym)	sos_hyp_sym(sym) = sym;
-
+#define SOS_HYP_ALIAS(sym) sos_hyp_sym(sym) = sym;
+#define SOS_HYP_ALIAS_HYP(first, sec) sos_hyp_sym(first) = sos_hyp_sym(sec);
 
 #endif /* LINKER_SCRIPT */
 

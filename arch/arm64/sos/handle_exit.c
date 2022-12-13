@@ -10,6 +10,8 @@
 
 //adto
 #include <linux/types.h>
+#include <linux/sched.h>
+#include <linux/threads.h>
 
 //#include <linux/kvm.h>
 //#include <linux/kvm_host.h>

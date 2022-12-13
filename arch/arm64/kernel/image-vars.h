@@ -138,12 +138,56 @@ KVM_NVHE_ALIAS(kvm_protected_mode_initialized);
 
 #ifdef CONFIG_ARM64_SOS
 
+/* Kernel symbol used by icache_is_vpipt(). */
+SOS_HYP_ALIAS(__icache_flags);
+
+
+/* Alternative callbacks for init-time patching of nVHE hyp code. */
+//SOS_HYP_ALIAS(kvm_patch_vector_branch);
+//SOS_HYP_ALIAS(kvm_update_va_mask);
+//SOS_HYP_ALIAS(kvm_get_kimage_voffset);
+SOS_HYP_ALIAS(kvm_compute_final_ctr_el0);
+
+/* Kernel symbols needed for cpus_have_final/const_caps checks. */
+SOS_HYP_ALIAS(arm64_const_caps_ready);
+SOS_HYP_ALIAS(cpu_hwcap_keys);
+
 /* Alternative callbacks for init-time patching of nVHE hyp code. */
 SOS_HYP_ALIAS(kvm_get_kimage_voffset);
 SOS_HYP_ALIAS(kvm_update_va_mask);
 
 /* Kernel symbols used to call panic() from nVHE hyp code (via ERET). */
 SOS_HYP_ALIAS(nvhe_hyp_panic_handler);
+
+/* Array containing bases of nVHE per-CPU memory regions. */
+SOS_HYP_ALIAS(kvm_arm_hyp_percpu_base);
+
+/* Position-independent library routines */
+SOS_HYP_ALIAS_HYP(clear_page, __pi_clear_page);
+SOS_HYP_ALIAS_HYP(copy_page, __pi_copy_page);
+SOS_HYP_ALIAS_HYP(memcpy, __pi_memcpy);
+SOS_HYP_ALIAS_HYP(memset, __pi_memset);
+
+/* Kernel memory sections */
+SOS_HYP_ALIAS(__start_rodata);
+SOS_HYP_ALIAS(__end_rodata);
+SOS_HYP_ALIAS(__bss_start);
+SOS_HYP_ALIAS(__bss_stop);
+
+/* Hyp memory sections */
+SOS_HYP_ALIAS(__hyp_idmap_text_start);
+SOS_HYP_ALIAS(__hyp_idmap_text_end);
+SOS_HYP_ALIAS(__hyp_text_start);
+SOS_HYP_ALIAS(__hyp_text_end);
+SOS_HYP_ALIAS(__hyp_bss_start);
+SOS_HYP_ALIAS(__hyp_bss_end);
+SOS_HYP_ALIAS(__hyp_rodata_start);
+SOS_HYP_ALIAS(__hyp_rodata_end);
+
+/* pKVM static key */
+SOS_HYP_ALIAS(kvm_protected_mode_initialized);
+
+
 #endif /* CONFIG_ARM64_SOS */
 
 #endif /* __ARM64_KERNEL_IMAGE_VARS_H */

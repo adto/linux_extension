@@ -8,7 +8,7 @@
 #include <linux/linkage.h>
 
 #include <asm/alternative.h>
-#include <asm/assembler.h>
+#include "assembler.h"
 #include <asm/el2_setup.h>
 #include <asm/kvm_arm.h>
 #include <asm/kvm_asm.h>
@@ -50,7 +50,7 @@ __invalid:
 	 * Only uses x0..x3 so as to not clobber callee-saved SMCCC registers.
 	 *
 	 * x0: SMCCC function ID
-	 * x1: struct kvm_nvhe_init_params PA
+	 * x1: struct sos_hyp_init_params PA
 	 */
 __do_hyp_init:
 	/* Check for a stub HVC call */
@@ -80,7 +80,7 @@ SYM_CODE_END(__kvm_hyp_init)
  * Only uses x0..x2 so as to not clobber callee-saved SMCCC registers
  * and leave x3 for the caller.
  *
- * x0: struct kvm_nvhe_init_params PA
+ * x0: struct sos_hyp_init_params PA
  */
 SYM_CODE_START_LOCAL(___kvm_hyp_init)
 	ldr	x1, [x0, #SOS_INIT_TPIDR_EL2]
@@ -141,7 +141,7 @@ SYM_CODE_END(___kvm_hyp_init)
 /*
  * PSCI CPU_ON entry point
  *
- * x0: struct kvm_nvhe_init_params PA
+ * x0: struct sos_hyp_init_params PA
  */
 SYM_CODE_START(kvm_hyp_cpu_entry)
 	mov	x1, #1				// is_cpu_on = true
@@ -151,7 +151,7 @@ SYM_CODE_END(kvm_hyp_cpu_entry)
 /*
  * PSCI CPU_SUSPEND / SYSTEM_SUSPEND entry point
  *
- * x0: struct kvm_nvhe_init_params PA
+ * x0: struct sos_hyp_init_params PA
  */
 SYM_CODE_START(kvm_hyp_cpu_resume)
 	mov	x1, #0				// is_cpu_on = false
@@ -162,7 +162,7 @@ SYM_CODE_END(kvm_hyp_cpu_resume)
  * Common code for CPU entry points. Initializes EL2 state and
  * installs the hypervisor before handing over to a C handler.
  *
- * x0: struct kvm_nvhe_init_params PA
+ * x0: struct sos_hyp_init_params PA
  * x1: bool is_cpu_on
  */
 SYM_CODE_START_LOCAL(__kvm_hyp_init_cpu)

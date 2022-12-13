@@ -5,6 +5,7 @@
  */
 
 #include <linux/errno.h>
+#include <linux/threads.h>
 //#include <linux/kernel.h>
 //#include <linux/kvm_host.h>
 //#include <linux/kvm.h>

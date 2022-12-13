@@ -6,7 +6,7 @@
 
 #include <linux/linkage.h>
 
-#include <asm/assembler.h>
+#include "assembler.h"
 #include <asm/sos_asm.h>
 #include <asm/sos_mmu.h>
 
@@ -65,10 +65,10 @@ SYM_FUNC_END(__host_exit)
 /*
  * void __noreturn __host_enter(struct kvm_cpu_context *host_ctxt);
  */
-//SYM_FUNC_START(__host_enter)
-//	mov	x29, x0
-//	b	__host_enter_restore_full
-//SYM_FUNC_END(__host_enter)
+SYM_FUNC_START(__host_enter)
+	mov	x29, x0
+	b	__host_enter_restore_full
+SYM_FUNC_END(__host_enter)
 
 /*
  * void __noreturn __hyp_do_panic(struct kvm_cpu_context *host_ctxt, u64 spsr,

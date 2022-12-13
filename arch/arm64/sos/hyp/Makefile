@@ -2,18 +2,25 @@
 #
 # Makefile for the sos.
 #
+
 asflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS
-ccflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS
+ccflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS \
+ -fno-stack-protector \
+ -DDISABLE_BRANCH_PROFILING \
+ $(DISABLE_STACKLEAK_PLUGIN)
 
 hostprogs := gen_hyprel
 HOST_EXTRACFLAGS += -I$(objtree)/include
 
-#adto: future use
-#lib-objs := clear_page.o copy_page.o memcpy.o memset.o
-#lib-objs := $(addprefix ../../../lib/, $(lib-objs))
-#obj-y += $(lib-objs)
+lib-objs := clear_page.o copy_page.o memcpy.o memset.o
+lib-objs := $(addprefix ../../lib/, $(lib-objs))
 
-obj-y := hyp_init.o early_alloc.o switch.o hyp-main.o hyp-entry.o host.o sos.o mem_protect.o
+obj-y := cache.o hyp-smp.o  mm.o setup.o hyp_init.o \
+ page_alloc.o early_alloc.o switch.o hyp-main.o hyp-entry.o host.o \
+ sos.o mem_protect.o tlb.o
+obj-y += ../pgtable.o
+obj-y += $(lib-objs)
+
 
 ##
 ## Build rules for compiling sos hyp code

@@ -132,71 +132,71 @@ struct kvm_vcpu {
 int __attribute_const__ kvm_target_cpu(void);
 //int kvm_reset_vcpu(struct kvm_vcpu *vcpu);
 //void kvm_arm_vcpu_destroy(struct kvm_vcpu *vcpu);
-//
-//struct kvm_vmid {
-//	/* The VMID generation used for the virt. memory system */
-//	u64    vmid_gen;
-//	u32    vmid;
-//};
-//
-//struct kvm_s2_mmu {
-//	struct kvm_vmid vmid;
-//
-//	/*
-//	 * stage2 entry level table
-//	 *
-//	 * Two kvm_s2_mmu structures in the same VM can point to the same
-//	 * pgd here.  This happens when running a guest using a
-//	 * translation regime that isn't affected by its own stage-2
-//	 * translation, such as a non-VHE hypervisor running at vEL2, or
-//	 * for vEL1/EL0 with vHCR_EL2.VM == 0.  In that case, we use the
-//	 * canonical stage-2 page tables.
-//	 */
-//	phys_addr_t	pgd_phys;
-//	struct kvm_pgtable *pgt;
-//
-//	/* The last vcpu id that ran on each physical CPU */
-//	int __percpu *last_vcpu_ran;
-//
-//	struct kvm_arch *arch;
-//};
-//
+
+struct kvm_vmid {
+	/* The VMID generation used for the virt. memory system */
+	u64    vmid_gen;
+	u32    vmid;
+};
+
+struct kvm_s2_mmu {
+	struct kvm_vmid vmid;
+
+	/*
+	 * stage2 entry level table
+	 *
+	 * Two kvm_s2_mmu structures in the same VM can point to the same
+	 * pgd here.  This happens when running a guest using a
+	 * translation regime that isn't affected by its own stage-2
+	 * translation, such as a non-VHE hypervisor running at vEL2, or
+	 * for vEL1/EL0 with vHCR_EL2.VM == 0.  In that case, we use the
+	 * canonical stage-2 page tables.
+	 */
+	phys_addr_t	pgd_phys;
+	struct kvm_pgtable *pgt;
+
+	/* The last vcpu id that ran on each physical CPU */
+	int __percpu *last_vcpu_ran;
+
+	struct kvm_arch *arch;
+};
+
 //struct kvm_arch_memory_slot {
 //};
-//
-//struct kvm_arch {
-//	struct kvm_s2_mmu mmu;
-//
-//	/* VTCR_EL2 value for this VM */
-//	u64    vtcr;
-//
-//	/* The maximum number of vCPUs depends on the used GIC model */
-//	int max_vcpus;
-//
-//	/* Interrupt controller */
-//	struct vgic_dist	vgic;
-//
-//	/* Mandated version of PSCI */
-//	u32 psci_version;
-//
-//	/*
-//	 * If we encounter a data abort without valid instruction syndrome
-//	 * information, report this to user space.  User space can (and
-//	 * should) opt in to this feature if KVM_CAP_ARM_NISV_TO_USER is
-//	 * supported.
-//	 */
-//	bool return_nisv_io_abort_to_user;
-//
-//	/*
-//	 * VM-wide PMU filter, implemented as a bitmap and big enough for
-//	 * up to 2^10 events (ARMv8.0) or 2^16 events (ARMv8.1+).
-//	 */
-//	unsigned long *pmu_filter;
-//	unsigned int pmuver;
-//
-//	u8 pfr0_csv2;
-//	u8 pfr0_csv3;
-//};
+
+struct kvm_arch {
+	struct kvm_s2_mmu mmu;
+
+	/* VTCR_EL2 value for this VM */
+	u64    vtcr;
+
+	/* The maximum number of vCPUs depends on the used GIC model */
+	int max_vcpus;
+
+	/* Interrupt controller */
+	//adto struct vgic_dist	vgic;
+
+	/* Mandated version of PSCI */
+	u32 psci_version;
+
+	/*
+	 * If we encounter a data abort without valid instruction syndrome
+	 * information, report this to user space.  User space can (and
+	 * should) opt in to this feature if KVM_CAP_ARM_NISV_TO_USER is
+	 * supported.
+	 */
+	bool return_nisv_io_abort_to_user;
+
+	/*
+	 * VM-wide PMU filter, implemented as a bitmap and big enough for
+	 * up to 2^10 events (ARMv8.0) or 2^16 events (ARMv8.1+).
+	 */
+	unsigned long *pmu_filter;
+	unsigned int pmuver;
+
+	u8 pfr0_csv2;
+	u8 pfr0_csv3;
+};
 
 struct kvm_vcpu_fault_info {
 	u32 esr_el2;		/* Hyp Syndrom Register */
@@ -321,15 +321,15 @@ struct kvm_host_data {
 //#define kvm_host_psci_config CHOOSE_NVHE_SYM(kvm_host_psci_config)
 //
 
-#define SOS_ADD_PREFIX(val) __sos_hyp_ ## val
+//#define sos_hyp_sym(val) __sos_hyp_ ## val
 
-extern s64 SOS_ADD_PREFIX(hyp_physvirt_offset);
-#define hyp_physvirt_offset SOS_ADD_PREFIX(hyp_physvirt_offset)
+extern s64 sos_hyp_sym(hyp_physvirt_offset);
+#define hyp_physvirt_offset sos_hyp_sym(hyp_physvirt_offset)
 
-//
-//extern u64 kvm_nvhe_sym(hyp_cpu_logical_map)[NR_CPUS];
-//#define hyp_cpu_logical_map CHOOSE_NVHE_SYM(hyp_cpu_logical_map)
-//
+
+extern u64 sos_hyp_sym(hyp_cpu_logical_map)[NR_CPUS];
+#define hyp_cpu_logical_map CHOOSE_SOS_HYP_SYM(hyp_cpu_logical_map)
+
 //struct vcpu_reset_state {
 //	unsigned long	pc;
 //	unsigned long	r0;
@@ -664,7 +664,7 @@ extern s64 SOS_ADD_PREFIX(hyp_physvirt_offset);
 //void kvm_arm_halt_guest(struct kvm *kvm);
 //void kvm_arm_resume_guest(struct kvm *kvm);
 //
-//#ifndef __KVM_NVHE_HYPERVISOR__
+#ifndef __KVM_NVHE_HYPERVISOR__
 #define kvm_call_hyp_nvhe(f, ...)						\
 	({								\
 		struct arm_smccc_res res;				\
@@ -675,22 +675,22 @@ extern s64 SOS_ADD_PREFIX(hyp_physvirt_offset);
 									\
 		res.a1;							\
 	})
-//
-///*
-// * The couple of isb() below are there to guarantee the same behaviour
-// * on VHE as on !VHE, where the eret to EL1 acts as a context
-// * synchronization event.
-// */
-//#define kvm_call_hyp(f, ...)						\
-//	do {								\
-//		if (has_vhe()) {					\
-//			f(__VA_ARGS__);					\
-//			isb();						\
-//		} else {						\
-//			kvm_call_hyp_nvhe(f, ##__VA_ARGS__);		\
-//		}							\
-//	} while(0)
-//
+
+/*
+ * The couple of isb() below are there to guarantee the same behaviour
+ * on VHE as on !VHE, where the eret to EL1 acts as a context
+ * synchronization event.
+ */
+#define kvm_call_hyp(f, ...)						\
+	do {								\
+		/*if (has_vhe()) {					\
+			f(__VA_ARGS__);					\
+			isb();						\
+		} else*/ {						\
+			kvm_call_hyp_nvhe(f, ##__VA_ARGS__);		\
+		}							\
+	} while(0)
+
 #define kvm_call_hyp_ret(f, ...)					\
 	({								\
 		typeof(f(__VA_ARGS__)) ret;				\
@@ -704,12 +704,12 @@ extern s64 SOS_ADD_PREFIX(hyp_physvirt_offset);
 									\
 		ret;							\
 	})
-//#else /* __KVM_NVHE_HYPERVISOR__ */
-//#define kvm_call_hyp(f, ...) f(__VA_ARGS__)
-//#define kvm_call_hyp_ret(f, ...) f(__VA_ARGS__)
-//#define kvm_call_hyp_nvhe(f, ...) f(__VA_ARGS__)
-//#endif /* __KVM_NVHE_HYPERVISOR__ */
-//
+#else /* __KVM_NVHE_HYPERVISOR__ */
+#define kvm_call_hyp(f, ...) f(__VA_ARGS__)
+#define kvm_call_hyp_ret(f, ...) f(__VA_ARGS__)
+#define kvm_call_hyp_nvhe(f, ...) f(__VA_ARGS__)
+#endif /* __KVM_NVHE_HYPERVISOR__ */
+
 //void force_vm_exit(const cpumask_t *mask);
 //
 //int handle_exit(struct kvm_vcpu *vcpu, int exception_index);
@@ -842,11 +842,11 @@ int kvm_set_ipa_limit(void);
 //
 //int kvm_trng_call(struct kvm_vcpu *vcpu);
 //#ifdef CONFIG_KVM
-//extern phys_addr_t hyp_mem_base;
-//extern phys_addr_t hyp_mem_size;
+extern phys_addr_t hyp_mem_base;
+extern phys_addr_t hyp_mem_size;
 //void __init kvm_hyp_reserve(void);
 //#else
 //static inline void kvm_hyp_reserve(void) { }
 //#endif
 
-#endif /* __ARM64_KVM_HOST_H__ */
+#endif /* __ARM64_SOS_HOST_H__ */

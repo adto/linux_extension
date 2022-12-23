@@ -234,38 +234,38 @@ int kvm_pgtable_stage2_init_flags(struct kvm_pgtable *pgt, struct kvm_arch *arch
 // * to freeing and therefore no TLB invalidation is performed.
 // */
 //void kvm_pgtable_stage2_destroy(struct kvm_pgtable *pgt);
-//
-///**
-// * kvm_pgtable_stage2_map() - Install a mapping in a guest stage-2 page-table.
-// * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
-// * @addr:	Intermediate physical address at which to place the mapping.
-// * @size:	Size of the mapping.
-// * @phys:	Physical address of the memory to map.
-// * @prot:	Permissions and attributes for the mapping.
-// * @mc:		Cache of pre-allocated and zeroed memory from which to allocate
-// *		page-table pages.
-// *
-// * The offset of @addr within a page is ignored, @size is rounded-up to
-// * the next page boundary and @phys is rounded-down to the previous page
-// * boundary.
-// *
-// * If device attributes are not explicitly requested in @prot, then the
-// * mapping will be normal, cacheable.
-// *
-// * Note that the update of a valid leaf PTE in this function will be aborted,
-// * if it's trying to recreate the exact same mapping or only change the access
-// * permissions. Instead, the vCPU will exit one more time from guest if still
-// * needed and then go through the path of relaxing permissions.
-// *
-// * Note that this function will both coalesce existing table entries and split
-// * existing block mappings, relying on page-faults to fault back areas outside
-// * of the new mapping lazily.
-// *
-// * Return: 0 on success, negative error code on failure.
-// */
-//int kvm_pgtable_stage2_map(struct kvm_pgtable *pgt, u64 addr, u64 size,
-//			   u64 phys, enum kvm_pgtable_prot prot,
-//			   void *mc);
+
+/**
+ * kvm_pgtable_stage2_map() - Install a mapping in a guest stage-2 page-table.
+ * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
+ * @addr:	Intermediate physical address at which to place the mapping.
+ * @size:	Size of the mapping.
+ * @phys:	Physical address of the memory to map.
+ * @prot:	Permissions and attributes for the mapping.
+ * @mc:		Cache of pre-allocated and zeroed memory from which to allocate
+ *		page-table pages.
+ *
+ * The offset of @addr within a page is ignored, @size is rounded-up to
+ * the next page boundary and @phys is rounded-down to the previous page
+ * boundary.
+ *
+ * If device attributes are not explicitly requested in @prot, then the
+ * mapping will be normal, cacheable.
+ *
+ * Note that the update of a valid leaf PTE in this function will be aborted,
+ * if it's trying to recreate the exact same mapping or only change the access
+ * permissions. Instead, the vCPU will exit one more time from guest if still
+ * needed and then go through the path of relaxing permissions.
+ *
+ * Note that this function will both coalesce existing table entries and split
+ * existing block mappings, relying on page-faults to fault back areas outside
+ * of the new mapping lazily.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int kvm_pgtable_stage2_map(struct kvm_pgtable *pgt, u64 addr, u64 size,
+			   u64 phys, enum kvm_pgtable_prot prot,
+			   void *mc);
 
 /**
  * kvm_pgtable_stage2_set_owner() - Unmap and annotate pages in the IPA space to
@@ -287,25 +287,25 @@ int kvm_pgtable_stage2_init_flags(struct kvm_pgtable *pgt, struct kvm_arch *arch
 int kvm_pgtable_stage2_set_owner(struct kvm_pgtable *pgt, u64 addr, u64 size,
 				 void *mc, u8 owner_id);
 
-///**
-// * kvm_pgtable_stage2_unmap() - Remove a mapping from a guest stage-2 page-table.
-// * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
-// * @addr:	Intermediate physical address from which to remove the mapping.
-// * @size:	Size of the mapping.
-// *
-// * The offset of @addr within a page is ignored and @size is rounded-up to
-// * the next page boundary.
-// *
-// * TLB invalidation is performed for each page-table entry cleared during the
-// * unmapping operation and the reference count for the page-table page
-// * containing the cleared entry is decremented, with unreferenced pages being
-// * freed. Unmapping a cacheable page will ensure that it is clean to the PoC if
-// * FWB is not supported by the CPU.
-// *
-// * Return: 0 on success, negative error code on failure.
-// */
-//int kvm_pgtable_stage2_unmap(struct kvm_pgtable *pgt, u64 addr, u64 size);
-//
+/**
+ * kvm_pgtable_stage2_unmap() - Remove a mapping from a guest stage-2 page-table.
+ * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
+ * @addr:	Intermediate physical address from which to remove the mapping.
+ * @size:	Size of the mapping.
+ *
+ * The offset of @addr within a page is ignored and @size is rounded-up to
+ * the next page boundary.
+ *
+ * TLB invalidation is performed for each page-table entry cleared during the
+ * unmapping operation and the reference count for the page-table page
+ * containing the cleared entry is decremented, with unreferenced pages being
+ * freed. Unmapping a cacheable page will ensure that it is clean to the PoC if
+ * FWB is not supported by the CPU.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int kvm_pgtable_stage2_unmap(struct kvm_pgtable *pgt, u64 addr, u64 size);
+
 ///**
 // * kvm_pgtable_stage2_wrprotect() - Write-protect guest stage-2 address range
 // *                                  without TLB invalidation.
@@ -425,24 +425,24 @@ int kvm_pgtable_stage2_set_owner(struct kvm_pgtable *pgt, u64 addr, u64 size,
 // */
 //int kvm_pgtable_walk(struct kvm_pgtable *pgt, u64 addr, u64 size,
 //		     struct kvm_pgtable_walker *walker);
-//
-///**
-// * kvm_pgtable_stage2_find_range() - Find a range of Intermediate Physical
-// *				     Addresses with compatible permission
-// *				     attributes.
-// * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
-// * @addr:	Address that must be covered by the range.
-// * @prot:	Protection attributes that the range must be compatible with.
-// * @range:	Range structure used to limit the search space at call time and
-// *		that will hold the result.
-// *
-// * The offset of @addr within a page is ignored. An IPA is compatible with @prot
-// * iff its corresponding stage-2 page-table entry has default ownership and, if
-// * valid, is mapped with protection attributes identical to @prot.
-// *
-// * Return: 0 on success, negative error code on failure.
-// */
-//int kvm_pgtable_stage2_find_range(struct kvm_pgtable *pgt, u64 addr,
-//				  enum kvm_pgtable_prot prot,
-//				  struct kvm_mem_range *range);
+
+/**
+ * kvm_pgtable_stage2_find_range() - Find a range of Intermediate Physical
+ *				     Addresses with compatible permission
+ *				     attributes.
+ * @pgt:	Page-table structure initialised by kvm_pgtable_stage2_init*().
+ * @addr:	Address that must be covered by the range.
+ * @prot:	Protection attributes that the range must be compatible with.
+ * @range:	Range structure used to limit the search space at call time and
+ *		that will hold the result.
+ *
+ * The offset of @addr within a page is ignored. An IPA is compatible with @prot
+ * iff its corresponding stage-2 page-table entry has default ownership and, if
+ * valid, is mapped with protection attributes identical to @prot.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int kvm_pgtable_stage2_find_range(struct kvm_pgtable *pgt, u64 addr,
+				  enum kvm_pgtable_prot prot,
+				  struct kvm_mem_range *range);
 #endif	/* __ARM64_SOS_PGTABLE_H__ */

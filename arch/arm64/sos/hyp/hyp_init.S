@@ -228,16 +228,16 @@ reset:
 	msr	sctlr_el2, x5
 	isb
 
-alternative_if ARM64_KVM_PROTECTED_MODE
+//alternative_if ARM64_KVM_PROTECTED_MODE
 	mov_q	x5, HCR_HOST_NVHE_FLAGS
 	msr	hcr_el2, x5
-alternative_else_nop_endif
+//alternative_else_nop_endif
 
-    //adto quick fix to resolve __hyp_stub_vectors dependency
+    //old comment: adto quick fix to resolve __hyp_stub_vectors dependency
 	///* Install stub vectors */
-	//adr_l	x5, __hyp_stub_vectors
-	//msr	vbar_el2, x5
-	//eret
+	adr_l	x5, __hyp_stub_vectors
+	msr	vbar_el2, x5
+	eret
 1000: b 1000
 
 1:	/* Bad stub call */

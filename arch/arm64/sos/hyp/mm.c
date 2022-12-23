@@ -101,33 +101,34 @@ int hyp_back_vmemmap(phys_addr_t phys, unsigned long size, phys_addr_t back)
 }
 
 static void *__hyp_bp_vect_base;
-//int pkvm_cpu_set_vector(enum arm64_hyp_spectre_vector slot)
-//{
-//	void *vector;
-//
-//	switch (slot) {
-//	case HYP_VECTOR_DIRECT: {
-//		vector = __kvm_hyp_vector;
-//		break;
-//	}
-//	case HYP_VECTOR_SPECTRE_DIRECT: {
-//		vector = __bp_harden_hyp_vecs;
-//		break;
-//	}
-//	case HYP_VECTOR_INDIRECT:
-//	case HYP_VECTOR_SPECTRE_INDIRECT: {
-//		vector = (void *)__hyp_bp_vect_base;
-//		break;
-//	}
-//	default:
-//		return -EINVAL;
-//	}
-//
-//	vector = __kvm_vector_slot2addr(vector, slot);
-//	*this_cpu_ptr(&kvm_hyp_vector) = (unsigned long)vector;
-//
-//	return 0;
-//}
+
+int pkvm_cpu_set_vector(enum arm64_hyp_spectre_vector slot)
+{
+	void *vector;
+
+	switch (slot) {
+	case HYP_VECTOR_DIRECT: {
+		vector = __kvm_hyp_vector;
+		break;
+	}
+	case HYP_VECTOR_SPECTRE_DIRECT: {
+		vector = __bp_harden_hyp_vecs;
+		break;
+	}
+	case HYP_VECTOR_INDIRECT:
+	case HYP_VECTOR_SPECTRE_INDIRECT: {
+		vector = (void *)__hyp_bp_vect_base;
+		break;
+	}
+	default:
+		return -EINVAL;
+	}
+
+	vector = __kvm_vector_slot2addr(vector, slot);
+	*this_cpu_ptr(&kvm_hyp_vector) = (unsigned long)vector;
+
+	return 0;
+}
 
 int hyp_map_vectors(void)
 {

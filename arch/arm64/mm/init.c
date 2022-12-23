@@ -35,7 +35,11 @@
 #include <asm/fixmap.h>
 #include <asm/kasan.h>
 #include <asm/kernel-pgtable.h>
-#include <asm/kvm_host.h>
+#if defined(CONFIG_ARM64_SOS)
+	#include <asm/sos_host.h>
+#else
+	#include <asm/kvm_host.h>
+#endif
 #include <asm/memory.h>
 #include <asm/numa.h>
 #include <asm/sections.h>

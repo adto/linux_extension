@@ -76,9 +76,9 @@
 #define __KVM_HOST_SMCCC_FUNC___pkvm_init			6
 //#define __KVM_HOST_SMCCC_FUNC___pkvm_create_mappings		5
 //#define __KVM_HOST_SMCCC_FUNC___pkvm_create_private_mapping	17
-//#define __KVM_HOST_SMCCC_FUNC___pkvm_cpu_set_vector		18
-#define __KVM_HOST_SMCCC_FUNC___pkvm_prot_finalize		7
-#define __KVM_HOST_SMCCC_FUNC___pkvm_mark_hyp			8
+#define __KVM_HOST_SMCCC_FUNC___pkvm_cpu_set_vector		7
+#define __KVM_HOST_SMCCC_FUNC___pkvm_prot_finalize		8
+#define __KVM_HOST_SMCCC_FUNC___pkvm_mark_hyp			9
 //#define __KVM_HOST_SMCCC_FUNC___kvm_adjust_pc			21
 //
 #ifndef __ASSEMBLY__
@@ -161,9 +161,11 @@ extern void *__nvhe_undefined_symbol;
 					   ? CHOOSE_VHE_SYM(sym)	\
 					   : CHOOSE_SOS_HYP_SYM(sym))
 
-#define this_cpu_ptr_hyp_sym(sym)	(is_kernel_in_hyp_mode()	\
-					   ? this_cpu_ptr(&sym)		\
-					   : this_cpu_ptr_nvhe_sym(sym))
+//#define this_cpu_ptr_hyp_sym(sym)	(is_kernel_in_hyp_mode()	\
+//					   ? this_cpu_ptr(&sym)		\
+//					   : this_cpu_ptr_nvhe_sym(sym))
+//adto quick fix
+#define this_cpu_ptr_hyp_sym(sym) (this_cpu_ptr_nvhe_sym(sym))
 
 //#define per_cpu_ptr_hyp_sym(sym, cpu)	(is_kernel_in_hyp_mode()	\
 //					   ? per_cpu_ptr(&sym, cpu)	\
@@ -232,33 +234,33 @@ extern void __kvm_tlb_flush_vmid(struct kvm_s2_mmu *mmu);
 //extern void __vgic_v3_init_lrs(void);
 //
 //extern u32 __kvm_get_mdcr_el2(void);
-//
-//#define __KVM_EXTABLE(from, to)						\
-//	"	.pushsection	__kvm_ex_table, \"a\"\n"		\
-//	"	.align		3\n"					\
-//	"	.long		(" #from " - .), (" #to " - .)\n"	\
-//	"	.popsection\n"
-//
-//
-//#define __kvm_at(at_op, addr)						\
-//( { 									\
-//	int __kvm_at_err = 0;						\
-//	u64 spsr, elr;							\
-//	asm volatile(							\
-//	"	mrs	%1, spsr_el2\n"					\
-//	"	mrs	%2, elr_el2\n"					\
-//	"1:	at	"at_op", %3\n"					\
-//	"	isb\n"							\
-//	"	b	9f\n"						\
-//	"2:	msr	spsr_el2, %1\n"					\
-//	"	msr	elr_el2, %2\n"					\
-//	"	mov	%w0, %4\n"					\
-//	"9:\n"								\
-//	__KVM_EXTABLE(1b, 2b)						\
-//	: "+r" (__kvm_at_err), "=&r" (spsr), "=&r" (elr)		\
-//	: "r" (addr), "i" (-EFAULT));					\
-//	__kvm_at_err;							\
-//} )
+
+#define __KVM_EXTABLE(from, to)						\
+	"	.pushsection	__kvm_ex_table, \"a\"\n"		\
+	"	.align		3\n"					\
+	"	.long		(" #from " - .), (" #to " - .)\n"	\
+	"	.popsection\n"
+
+
+#define __kvm_at(at_op, addr)						\
+( { 									\
+	int __kvm_at_err = 0;						\
+	u64 spsr, elr;							\
+	asm volatile(							\
+	"	mrs	%1, spsr_el2\n"					\
+	"	mrs	%2, elr_el2\n"					\
+	"1:	at	"at_op", %3\n"					\
+	"	isb\n"							\
+	"	b	9f\n"						\
+	"2:	msr	spsr_el2, %1\n"					\
+	"	msr	elr_el2, %2\n"					\
+	"	mov	%w0, %4\n"					\
+	"9:\n"								\
+	__KVM_EXTABLE(1b, 2b)						\
+	: "+r" (__kvm_at_err), "=&r" (spsr), "=&r" (elr)		\
+	: "r" (addr), "i" (-EFAULT));					\
+	__kvm_at_err;							\
+} )
 
 
 #else /* __ASSEMBLY__ */

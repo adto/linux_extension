@@ -2,12 +2,22 @@
 #
 # Makefile for the sos.
 #
-subdir-asflags-y := -I$(incdir)
-subdir-ccflags-y := -I$(incdir)				\
+subdir-asflags-y += -I$(incdir) \
+            -Og
+subdir-ccflags-y += -I$(incdir)				\
 		    -fno-stack-protector		\
 		    -DDISABLE_BRANCH_PROFILING		\
-		    $(DISABLE_STACKLEAK_PLUGIN)
+		    $(DISABLE_STACKLEAK_PLUGIN) \
+		    -Og \
+		    -fno-inline-functions \
+			-fno-inline-small-functions \
+			-fno-inline-functions-called-once
 
+asflags-y += -Og
+ccflags-y += -Og \
+		     -fno-inline-functions \
+			 -fno-inline-small-functions \
+			 -fno-inline-functions-called-once
 
 
 obj-$(CONFIG_ARM64_SOS) += sos_character_device.o

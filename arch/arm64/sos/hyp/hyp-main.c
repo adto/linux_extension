@@ -16,7 +16,7 @@
 #include <asm/sos_mmu.h>
 //
 #include "mem_protect.h"
-//#include <nvhe/mm.h>
+#include "mm.h"
 #include "trap_handler.h"
 
 DEFINE_PER_CPU(struct sos_hyp_init_params, sos_init_params);
@@ -150,12 +150,12 @@ static void handle___pkvm_init(struct kvm_cpu_context *host_ctxt)
 					    hyp_va_bits);
 }
 
-//static void handle___pkvm_cpu_set_vector(struct kvm_cpu_context *host_ctxt)
-//{
-//	DECLARE_REG(enum arm64_hyp_spectre_vector, slot, host_ctxt, 1);
-//
-//	cpu_reg(host_ctxt, 1) = pkvm_cpu_set_vector(slot);
-//}
+static void handle___pkvm_cpu_set_vector(struct kvm_cpu_context *host_ctxt)
+{
+	DECLARE_REG(enum arm64_hyp_spectre_vector, slot, host_ctxt, 1);
+
+	cpu_reg(host_ctxt, 1) = pkvm_cpu_set_vector(slot);
+}
 
 //static void handle___pkvm_create_mappings(struct kvm_cpu_context *host_ctxt)
 //{
@@ -211,7 +211,7 @@ static const hcall_t host_hcall[] = {
 //	HANDLE_FUNC(__vgic_v3_save_aprs),
 //	HANDLE_FUNC(__vgic_v3_restore_aprs),
 	HANDLE_FUNC(__pkvm_init),
-//	HANDLE_FUNC(__pkvm_cpu_set_vector),
+	HANDLE_FUNC(__pkvm_cpu_set_vector),
 //	HANDLE_FUNC(__pkvm_create_mappings),
 //	HANDLE_FUNC(__pkvm_create_private_mapping),
 	HANDLE_FUNC(__pkvm_prot_finalize),

@@ -14,8 +14,7 @@
 #include <asm/sos_pgtable.h>
 #include <asm/stage2_pgtable.h>
 
-//#include <hyp/switch.h>
-
+#include "switch.h"
 #include "gfp.h"
 #include "memory.h"
 #include "mem_protect.h"
@@ -142,22 +141,22 @@ int __pkvm_prot_finalize(void)
 	return 0;
 }
 
-//static int host_stage2_unmap_dev_all(void)
-//{
-//	struct kvm_pgtable *pgt = &host_kvm.pgt;
-//	struct memblock_region *reg;
-//	u64 addr = 0;
-//	int i, ret;
-//
-//	/* Unmap all non-memory regions to recycle the pages */
-//	for (i = 0; i < hyp_memblock_nr; i++, addr = reg->base + reg->size) {
-//		reg = &hyp_memory[i];
-//		ret = kvm_pgtable_stage2_unmap(pgt, addr, reg->base - addr);
-//		if (ret)
-//			return ret;
-//	}
-//	return kvm_pgtable_stage2_unmap(pgt, addr, BIT(pgt->ia_bits) - addr);
-//}
+static int host_stage2_unmap_dev_all(void)
+{
+	struct kvm_pgtable *pgt = &host_kvm.pgt;
+	struct memblock_region *reg;
+	u64 addr = 0;
+	int i, ret;
+
+	/* Unmap all non-memory regions to recycle the pages */
+	for (i = 0; i < hyp_memblock_nr; i++, addr = reg->base + reg->size) {
+		reg = &hyp_memory[i];
+		ret = kvm_pgtable_stage2_unmap(pgt, addr, reg->base - addr);
+		if (ret)
+			return ret;
+	}
+	return kvm_pgtable_stage2_unmap(pgt, addr, BIT(pgt->ia_bits) - addr);
+}
 
 static bool find_mem_range(phys_addr_t addr, struct kvm_mem_range *range)
 {
@@ -201,52 +200,52 @@ static bool range_is_memory(u64 start, u64 end)
 	return true;
 }
 
-//static inline int __host_stage2_idmap(u64 start, u64 end,
-//				      enum kvm_pgtable_prot prot,
-//				      struct hyp_pool *pool)
-//{
-//	return kvm_pgtable_stage2_map(&host_kvm.pgt, start, end - start, start,
-//				      prot, pool);
-//}
+static inline int __host_stage2_idmap(u64 start, u64 end,
+				      enum kvm_pgtable_prot prot,
+				      struct hyp_pool *pool)
+{
+	return kvm_pgtable_stage2_map(&host_kvm.pgt, start, end - start, start,
+				      prot, pool);
+}
 
-//static int host_stage2_idmap(u64 addr)
-//{
-//	enum kvm_pgtable_prot prot = KVM_PGTABLE_PROT_R | KVM_PGTABLE_PROT_W;
-//	struct kvm_mem_range range;
-//	bool is_memory = find_mem_range(addr, &range);
-//	struct hyp_pool *pool = is_memory ? &host_s2_mem : &host_s2_dev;
-//	int ret;
-//
-//	if (is_memory)
-//		prot |= KVM_PGTABLE_PROT_X;
-//
-//	hyp_spin_lock(&host_kvm.lock);
-//	ret = kvm_pgtable_stage2_find_range(&host_kvm.pgt, addr, prot, &range);
-//	if (ret)
-//		goto unlock;
-//
-//	ret = __host_stage2_idmap(range.start, range.end, prot, pool);
-//	if (is_memory || ret != -ENOMEM)
-//		goto unlock;
-//
-//	/*
-//	 * host_s2_mem has been provided with enough pages to cover all of
-//	 * memory with page granularity, so we should never hit the ENOMEM case.
-//	 * However, it is difficult to know how much of the MMIO range we will
-//	 * need to cover upfront, so we may need to 'recycle' the pages if we
-//	 * run out.
-//	 */
-//	ret = host_stage2_unmap_dev_all();
-//	if (ret)
-//		goto unlock;
-//
-//	ret = __host_stage2_idmap(range.start, range.end, prot, pool);
-//
-//unlock:
-//	hyp_spin_unlock(&host_kvm.lock);
-//
-//	return ret;
-//}
+static int host_stage2_idmap(u64 addr)
+{
+	enum kvm_pgtable_prot prot = KVM_PGTABLE_PROT_R | KVM_PGTABLE_PROT_W;
+	struct kvm_mem_range range;
+	bool is_memory = find_mem_range(addr, &range);
+	struct hyp_pool *pool = is_memory ? &host_s2_mem : &host_s2_dev;
+	int ret;
+
+	if (is_memory)
+		prot |= KVM_PGTABLE_PROT_X;
+
+	hyp_spin_lock(&host_kvm.lock);
+	ret = kvm_pgtable_stage2_find_range(&host_kvm.pgt, addr, prot, &range);
+	if (ret)
+		goto unlock;
+
+	ret = __host_stage2_idmap(range.start, range.end, prot, pool);
+	if (is_memory || ret != -ENOMEM)
+		goto unlock;
+
+	/*
+	 * host_s2_mem has been provided with enough pages to cover all of
+	 * memory with page granularity, so we should never hit the ENOMEM case.
+	 * However, it is difficult to know how much of the MMIO range we will
+	 * need to cover upfront, so we may need to 'recycle' the pages if we
+	 * run out.
+	 */
+	ret = host_stage2_unmap_dev_all();
+	if (ret)
+		goto unlock;
+
+	ret = __host_stage2_idmap(range.start, range.end, prot, pool);
+
+unlock:
+	hyp_spin_unlock(&host_kvm.lock);
+
+	return ret;
+}
 
 int __pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
 {
@@ -269,14 +268,14 @@ int __pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
 
 void handle_host_mem_abort(struct kvm_cpu_context *host_ctxt)
 {
-//	struct kvm_vcpu_fault_info fault;
-//	u64 esr, addr;
-//	int ret = 0;
-//
-//	esr = read_sysreg_el2(SYS_ESR);
-//	BUG_ON(!__get_fault_info(esr, &fault));
-//
-//	addr = (fault.hpfar_el2 & HPFAR_MASK) << 8;
-//	ret = host_stage2_idmap(addr);
-//	BUG_ON(ret && ret != -EAGAIN);
+	struct kvm_vcpu_fault_info fault;
+	u64 esr, addr;
+	int ret = 0;
+
+	esr = read_sysreg_el2(SYS_ESR);
+	BUG_ON(!__get_fault_info(esr, &fault));
+
+	addr = (fault.hpfar_el2 & HPFAR_MASK) << 8;
+	ret = host_stage2_idmap(addr);
+	BUG_ON(ret && ret != -EAGAIN);
 }

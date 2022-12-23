@@ -761,6 +761,10 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
 
 #adto dirty fix for debugger
 KBUILD_CFLAGS	+=  -Og
+KBUILD_CFLAGS   += -Og $(call cc-option, -fno-inline-functions) \
+		   $(call cc-option, -fno-inline-small-functions) \
+		   $(call cc-option, -fno-inline-functions-called-once)
+#adto end of debug patch
 
 # Tell gcc to never replace conditional load with a non-conditional one
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)

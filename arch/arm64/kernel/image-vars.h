@@ -138,9 +138,11 @@ KVM_NVHE_ALIAS(kvm_protected_mode_initialized);
 
 #ifdef CONFIG_ARM64_SOS
 
+/* Vectors installed by hyp-init on reset HVC. */
+SOS_HYP_ALIAS(__hyp_stub_vectors);
+
 /* Kernel symbol used by icache_is_vpipt(). */
 SOS_HYP_ALIAS(__icache_flags);
-
 
 /* Alternative callbacks for init-time patching of nVHE hyp code. */
 //SOS_HYP_ALIAS(kvm_patch_vector_branch);
@@ -187,6 +189,8 @@ SOS_HYP_ALIAS(__hyp_rodata_end);
 /* pKVM static key */
 SOS_HYP_ALIAS(kvm_protected_mode_initialized);
 
+//adto add log functionality
+SOS_HYP_ALIAS(printk);
 
 #endif /* CONFIG_ARM64_SOS */
 

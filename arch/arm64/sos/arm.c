@@ -1531,25 +1531,28 @@ static void cpu_set_hyp_vector(void)
 	void *vector = hyp_spectre_vector_selector[data->slot];
 
 //	if (!is_protected_kvm_enabled())
-	*this_cpu_ptr_nvhe_sym(kvm_hyp_vector) = (unsigned long)vector;
+	//*this_cpu_ptr_nvhe_sym(kvm_hyp_vector) = (unsigned long)vector;
 	//adto *this_cpu_ptr_hyp_sym(kvm_hyp_vector) = (unsigned long)vector;
 //	else
-//		kvm_call_hyp_nvhe(__pkvm_cpu_set_vector, data->slot);
+
+	kvm_call_hyp_nvhe(__pkvm_cpu_set_vector, data->slot);
 }
 
 static void cpu_hyp_reinit(void)
 {
 	//!!!adto this_cpu_ptr_hyp_sym is apparently try to access to nvhe symbol!!!
-	//fucking don't know what is happening here.
-	//kvm_init_host_cpu_context(&this_cpu_ptr_hyp_sym(kvm_host_data)->host_ctxt);
+	kvm_init_host_cpu_context(&this_cpu_ptr_hyp_sym(kvm_host_data)->host_ctxt);
 
+	//sos_info("cpu_hyp_reset called!\n");
 	cpu_hyp_reset();
 
 //	if (is_kernel_in_hyp_mode())
 //		kvm_timer_init_vhe();
 //	else
+	    //sos_info("cpu_init_hyp_mode called!\n");
 		cpu_init_hyp_mode();
 
+	//sos_info("cpu_set_hyp_vector called!\n");
 	cpu_set_hyp_vector();
 
 	//!!!adto_ lets assume we dont need any debug feature :) !!!
@@ -1698,7 +1701,11 @@ static int init_subsystems(void)
 	/*
 	 * Enable hardware so that subsystem initialisation can access EL2.
 	 */
+
+	sos_info("kvm_arch_hardware_enable called!\n");
 	on_each_cpu(_kvm_arch_hardware_enable, NULL, 1);
+	sos_info("kvm_arch_hardware_enable finished!\n");
+
 
 //	!!!adto lets hope the best we dont need this for sos!!!
 //	/*
@@ -1740,8 +1747,10 @@ static int init_subsystems(void)
 //
 out:
 //	if (err || !is_protected_kvm_enabled())
-	if (err)
+	if (err) {
+		sos_info("Error: _kvm_arch_hardware_disable called!\n");
 		on_each_cpu(_kvm_arch_hardware_disable, NULL, 1);
+	}
 
 	return err;
 }
@@ -1926,10 +1935,14 @@ static int init_hyp_mode(void)
 		cpu_prepare_hyp_mode(cpu);
 	}
 
+
 //	if (is_protected_kvm_enabled()) {
 
 		//adto:selected pkvm feature shall be used.
+		sos_info("init_cpu_logical_map called!\n");
 		init_cpu_logical_map();
+
+
 //
 //		if (!init_psci_relay()) {
 //			err = -ENODEV;
@@ -1939,12 +1952,24 @@ static int init_hyp_mode(void)
 
 //	if (is_protected_kvm_enabled()) {
 
+
+		//temporary inject!
+		//sos_info("!!!!___ _kvm_arch_hardware_enable called!\n");
+		//on_each_cpu(_kvm_arch_hardware_enable, NULL, 1);
+		//sos_info("!!!!___ _kvm_arch_hardware_enable finished!\n");
+
 		//adto:selected pkvm feature shall be used.
+		sos_info("kvm_hyp_init_protection called!\n");
 		err = kvm_hyp_init_protection(hyp_va_bits);
 		if (err) {
 			sos_err("Failed to init hyp memory protection\n");
 			goto out_err;
 		}
+
+
+
+
+
 //	}
 
 	return 0;
@@ -1957,10 +1982,12 @@ out_err:
 
 static void _kvm_host_prot_finalize(void *discard)
 {
+	sos_info("##_kvm_host_prot_finalize called##\n");
 	WARN_ON(kvm_call_hyp_nvhe(__pkvm_prot_finalize));
+	sos_info("##_kvm_host_prot_finalize finished##\n");
 }
 
-static inline int pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
+static int pkvm_mark_hyp(phys_addr_t start, phys_addr_t end)
 {
 	return kvm_call_hyp_nvhe(__pkvm_mark_hyp, start, end);
 }
@@ -1973,25 +2000,31 @@ static int finalize_hyp_mode(void)
 {
 	int cpu, ret;
 
-	if (!is_protected_kvm_enabled())
-		return 0;
+//	if (!is_protected_kvm_enabled())
+//		return 0;
 
+	sos_info("pkvm_mark_hyp_section__hyp_idmap_text called\n");
 	ret = pkvm_mark_hyp_section(__hyp_idmap_text);
 	if (ret)
 		return ret;
 
+
+	sos_info("pkvm_mark_hyp_section__hyp_tex finished\n");
 	ret = pkvm_mark_hyp_section(__hyp_text);
 	if (ret)
 		return ret;
 
+	sos_info("pkvm_mark_hyp_section__hyp_rodata finished\n");
 	ret = pkvm_mark_hyp_section(__hyp_rodata);
 	if (ret)
 		return ret;
 
+	sos_info("pkvm_mark_hyp_section__hyp_bss finished\n");
 	ret = pkvm_mark_hyp_section(__hyp_bss);
 	if (ret)
 		return ret;
 
+	sos_info("pkvm_mark_hyp_section hyp_mem_base\n");
 	ret = pkvm_mark_hyp(hyp_mem_base, hyp_mem_base + hyp_mem_size);
 	if (ret)
 		return ret;
@@ -2000,12 +2033,14 @@ static int finalize_hyp_mode(void)
 		phys_addr_t start = virt_to_phys((void *)kvm_arm_hyp_percpu_base[cpu]);
 		phys_addr_t end = start + (PAGE_SIZE << nvhe_percpu_order());
 
+		sos_info("pkvm_mark_hyp_section per cpu\n");
 		ret = pkvm_mark_hyp(start, end);
 		if (ret)
 			return ret;
 
 		start = virt_to_phys((void *)per_cpu(kvm_arm_hyp_stack_page, cpu));
 		end = start + PAGE_SIZE;
+		sos_info("pkvm_mark_hyp_section stack\n");
 		ret = pkvm_mark_hyp(start, end);
 		if (ret)
 			return ret;
@@ -2016,6 +2051,7 @@ static int finalize_hyp_mode(void)
 //	 * once the host stage 2 is installed.
 //	 */
 //	static_branch_enable(&kvm_protected_mode_initialized);
+	sos_info("_kvm_host_prot_finalize called\n");
 	on_each_cpu(_kvm_host_prot_finalize, NULL, 1);
 
 	return 0;
@@ -2116,30 +2152,36 @@ int sos_arch_init(void *opaque)
 //	if (err)
 //		return err;
 
-	if (!in_hyp_mode) {
+//	if (!in_hyp_mode) {
+		sos_info("init_hyp_mode called!\n");
 		err = init_hyp_mode();
-		if (err)
+		if (err) {
 			goto out_err;
-	}
+		}
+//	}
 
+	sos_info("kvm_init_vector_slots called!\n");
 	err = kvm_init_vector_slots();
 	if (err) {
-		sos_err("Cannot initialise vector slots\n");
+		sos_info("Cannot initialise vector slots\n");
 		goto out_err;
 	}
 
+	sos_info("init_subsystems called!\n");
 	err = init_subsystems();
-	if (err)
-		sos_err("Something nasty happened during init_subsystems function call.\n");
+	if (err) {
+		sos_info("Something nasty happened during init_subsystems function call.\n");
 		goto out_hyp;
+	}
 
-	if (!in_hyp_mode) {
+//	if (!in_hyp_mode) {
+		sos_info("finalize_hyp_mode called!\n");
 		err = finalize_hyp_mode();
 		if (err) {
-			sos_err("Failed to finalize Hyp protection\n");
+			sos_info("Failed to finalize Hyp protection\n");
 			goto out_hyp;
 		}
-	}
+//	}
 //
 //	if (is_protected_kvm_enabled()) {
 		sos_info("Protected nVHE mode initialized successfully\n");
@@ -2149,13 +2191,14 @@ int sos_arch_init(void *opaque)
 //		kvm_info("Hyp mode initialized successfully\n");
 //	}
 //
-//	return 0;
+	return 0;
 //
 out_hyp:
 //	hyp_cpu_pm_exit();
 //	if (!in_hyp_mode)
 		//teardown_hyp_mode();
 out_err:
+	sos_info("Error happened!\n");
 	return err;
 }
 //

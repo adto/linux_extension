@@ -132,6 +132,14 @@ SYM_FUNC_END(__hyp_do_panic)
 
 .macro invalid_host_el2_vect
 	.align 7
+	//adto added similar like other invalid vectors
+	mov	x0, xzr		/* restore_host = false */
+	mrs	x1, spsr_el2
+	mrs	x2, elr_el2
+	mrs	x3, par_el1
+	b	__hyp_do_panic
+
+
 //	/* If a guest is loaded, panic out of it. */
 //	stp	x0, x1, [sp, #-16]!
 //	get_loaded_vcpu x0, x1

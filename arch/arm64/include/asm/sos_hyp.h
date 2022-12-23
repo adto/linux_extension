@@ -15,7 +15,7 @@
 #include <asm/sos_asm.h>
 
 //DECLARE_PER_CPU(struct kvm_cpu_context, kvm_hyp_ctxt);
-//DECLARE_PER_CPU(unsigned long, kvm_hyp_vector);
+DECLARE_PER_CPU(unsigned long, kvm_hyp_vector);
 DECLARE_PER_CPU(struct sos_hyp_init_params, sos_init_params);
 
 #define read_sysreg_elx(r,nvh,vh)					\

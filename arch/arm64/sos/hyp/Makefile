@@ -3,11 +3,15 @@
 # Makefile for the sos.
 #
 
-asflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS
-ccflags-y := -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS \
- -fno-stack-protector \
- -DDISABLE_BRANCH_PROFILING \
- $(DISABLE_STACKLEAK_PLUGIN)
+asflags-y += -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS -Og
+ccflags-y += -D__KVM_NVHE_HYPERVISOR__ -D__DISABLE_EXPORTS \
+			 -fno-stack-protector \
+			 -DDISABLE_BRANCH_PROFILING \
+			 $(DISABLE_STACKLEAK_PLUGIN) \
+			 -Og \
+			 -fno-inline-functions \
+			 -fno-inline-small-functions \
+			 -fno-inline-functions-called-once
 
 hostprogs := gen_hyprel
 HOST_EXTRACFLAGS += -I$(objtree)/include

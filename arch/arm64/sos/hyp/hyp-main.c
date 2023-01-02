@@ -277,6 +277,12 @@ void handle_trap(struct kvm_cpu_context *host_ctxt)
 	case ESR_ELx_EC_DABT_LOW:
 		handle_host_mem_abort(host_ctxt);
 		break;
+	case ESR_ELx_EC_SVC64:
+		handle_svc(host_ctxt);
+		break;
+	case ESR_ELx_EC_ERET:
+		handle_eret(host_ctxt);
+		break;
 	default:
 		BUG();
 	}

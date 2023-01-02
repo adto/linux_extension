@@ -213,20 +213,6 @@ int __pkvm_init(phys_addr_t phys, unsigned long size, unsigned long nr_cpus,
 	//params = this_cpu_ptr(&sos_init_params);
 	params = raw_cpu_ptr(&sos_init_params);
 
-
-
-//	static volatile unsigned int va__pkvm_init_switch_pgd;
-//	static volatile unsigned int pa__pkvm_init_switch_pgd;
-//	static volatile unsigned int va__pkvm_init_finalise;
-//	static volatile unsigned int pa__pkvm_init_finalise;
-//
-//
-//	va__pkvm_init_switch_pgd = &__pkvm_init_switch_pgd;
-//	pa__pkvm_init_switch_pgd = __hyp_pa(__pkvm_init_switch_pgd);
-//	va__pkvm_init_finalise = &__pkvm_init_finalise;
-//	pa__pkvm_init_finalise = __hyp_pa(__pkvm_init_finalise);
-
-
 	fn = (typeof(fn))__hyp_pa(__pkvm_init_switch_pgd);
 	//fn = (typeof(fn))__pkvm_init_switch_pgd;
 	fn(__hyp_pa(params), __pkvm_init_finalise);

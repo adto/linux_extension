@@ -16,6 +16,7 @@
 #include <linux/ioctl.h>
 #include <linux/sched.h> //get current as current process
 #include <linux/arm-smccc.h> //for HVC/SMC function call
+#include <asm/sos_host.h>
 #include <asm/sos_asm.h>
 #include "sos_character_device.h"
 
@@ -35,10 +36,10 @@
 #define GENERIC_ERROR -1
 
 //define SOS specific services
-#define SOS_INIT_HYP 0x01u
-#define SOS_ENTER 0x02u
-#define SOS_EXIT 0x03u
-#define SOS_GET_STATUS 0x04u
+#define SOS_INIT_HYP 0x00u
+#define SOS_ENTER 0x01u
+#define SOS_EXIT 0x02u
+#define SOS_GET_STATUS 0x03u
 #define SOS_RESET_HYP 0xFFu
 
 
@@ -132,7 +133,13 @@ static void sos_init_hyp(void) {
 
 	int r;
 
+
+	uint64_t function_address = (uint64_t) sos_arch_init;
+	sos_info("%lx\n", function_address);
+
+	//!!! do the complete initialization here !!!
 	r = sos_arch_init(NULL);
+
 	if (r)
 		goto out_fail;
 
@@ -147,30 +154,37 @@ out_fail:
 /* This function will be called when we write IOCTL on the Device file. */
 static long sos_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-	unsigned int service_id;
+	u8 service_id;
 
 	switch(cmd) {
 		case SERVICE_SOS:
-			service_id = *((unsigned int*)arg);
+			//service_id = *((unsigned int*)arg);
+			copy_from_user(&service_id,(u8*)arg,1);
+
 			switch(service_id) {
 				case SOS_INIT_HYP:
 					sos_info("Service the sos: SOS_INIT_HYP\n");
+					sos_info("No action: just placeholder.\n");
 					break;
 
 				case SOS_ENTER:
 					sos_info("Service the sos: SOS_ENTER\n");
+					kvm_call_hyp_nvhe(__sos_enter);
 					break;
 
 				case SOS_EXIT:
 					sos_info("Service the sos: SOS_EXIT\n");
+					kvm_call_hyp_nvhe(__sos_exit);
 					break;
 
 				case SOS_GET_STATUS:
 					sos_info("Service the sos: SOS_GET_STATUS\n");
+					sos_info("No action: just placeholder.\n");
 					break;
 
 				case SOS_RESET_HYP:
 					sos_info("Service the sos: SOS_RESET_HYP\n");
+					sos_info("No action: just placeholder.\n");
 					break;
 
 				default:

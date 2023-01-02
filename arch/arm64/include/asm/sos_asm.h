@@ -213,8 +213,7 @@ DECLARE_SOS_HYP_SYM(__per_cpu_end);
 DECLARE_SOS_HYP_SYM(__bp_harden_hyp_vecs);
 #define __bp_harden_hyp_vecs	CHOOSE_SOS_HYP_SYM(__bp_harden_hyp_vecs)
 
-extern int __sos_enter(struct kvm_vcpu *vcpu);
-extern int __sos_exit(struct kvm_vcpu *vcpu);
+
 
 //extern void __kvm_flush_vm_context(void);
 //extern void __kvm_flush_cpu_context(struct kvm_s2_mmu *mmu);

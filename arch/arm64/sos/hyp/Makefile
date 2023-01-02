@@ -21,7 +21,7 @@ lib-objs := $(addprefix ../../lib/, $(lib-objs))
 
 obj-y := cache.o hyp-smp.o  mm.o setup.o hyp_init.o \
  page_alloc.o early_alloc.o switch.o hyp-main.o hyp-entry.o host.o \
- sos.o mem_protect.o tlb.o
+ sos.o mem_protect.o tlb.o syscall.o
 obj-y += ../pgtable.o
 obj-y += $(lib-objs)
 

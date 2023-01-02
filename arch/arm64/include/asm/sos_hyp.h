@@ -18,6 +18,7 @@
 DECLARE_PER_CPU(unsigned long, kvm_hyp_vector);
 DECLARE_PER_CPU(struct sos_hyp_init_params, sos_init_params);
 
+
 #define read_sysreg_elx(r,nvh,vh)					\
 	({								\
 		u64 reg;						\
@@ -115,6 +116,10 @@ void __pkvm_init_switch_pgd(phys_addr_t phys, unsigned long size,
 int __pkvm_init(phys_addr_t phys, unsigned long size, unsigned long nr_cpus,
 		unsigned long *per_cpu_base, u32 hyp_va_bits);
 void __noreturn __host_enter(struct kvm_cpu_context *host_ctxt);
+void handle_svc(struct kvm_cpu_context *host_ctxt);
+void handle_eret(struct kvm_cpu_context *host_ctxt);
+int __sos_enter(struct kvm_vcpu *vcpu);
+int __sos_exit(struct kvm_vcpu *vcpu);
 #endif
 
 extern u64 sos_hyp_sym(id_aa64mmfr0_el1_sys_val);
